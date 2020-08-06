@@ -21,9 +21,36 @@ def _report_progress(n, nt, timer_start):
         100 * progress, timer_elapsed, timer_eta)
 
 
-def gnlse(t, x, u0, beta, nonlin, dt=None):
+def gnlse(t, x, u0, beta, gamma, nonlin, dt=None):
     """
     Integrate a GNLSE using the integrating factor method.
+
+    This function integrates a generalized version of nonlinear Schödinger
+    equation
+
+    i ∂ₜ ũ + β(k) ũ(t, k) + γ(k) F{ N(t, x, u(t, x)) } = 0,
+
+    where ũ(t, k) is the spectrum of the unknown field, β(k) is a
+    dispersive operator, and γ(k) is a gain coefficient. u(t, x) is the
+    coordinate-domain representation of the same unknown field, and
+    nonolinear operator N(t, x, u(t, x)) is defined in terms of that
+    coordinate representation.
+
+    The integration is performed using the integrating factor method as
+    described by J.M. Dudley & J.R. Taylor in Chapter 3 of Supercontinuum
+    Generation in Optical Fibers, CUP 2010. Instead of integrating the
+    original equation we restort to integrating a modified version
+
+    i ∂ₜ v + γ(k) F{ N(t, x, u(t, x)) } = 0,
+
+    where v = v(t, k) is the modified spectrum that is defined as
+
+    u(t, k) = exp(i β(k) t) v(t, k).
+
+    The modifed equation is supposed to be non-stiff, which allows us to
+    apply almost any third-party solver. We chose a scipy-provided wrapper
+    of ZVODE solver from ODEPACK, which offers error control and an
+    adaptive scheme for step-size selection.
 
     Parameters
     ----------
@@ -36,8 +63,10 @@ def gnlse(t, x, u0, beta, nonlin, dt=None):
         the initial condition at t[0]
     beta : callable with the signature of beta(f)
         the dispersive profile as a function of frequency
+    gamma : callable with the signature of gamma(f)
+        frequency-dependent gain coefficient
     nonlin : callable with the signature of nonlin(t, x, u)
-        the nonlinear operator in the equation
+        time-domain part of the nonlinear operator
 
     Returns
     -------
@@ -68,8 +97,9 @@ def gnlse(t, x, u0, beta, nonlin, dt=None):
     v[0, :] = fft.fftshift(v0)
 
     # Prepare the frequency scale and evaluate beta on the scale
-    f = 2 * numpy.pi * fft.fftfreq(nx, x[1] - x[0])
-    D = beta(f)
+    k = 2 * numpy.pi * fft.fftfreq(nx, x[1] - x[0])
+    D = beta(k)
+    G = gamma(k)
 
     # Prepare the RHS we feed to the solver
     def rhs(t_, v_):
@@ -80,7 +110,7 @@ def gnlse(t, x, u0, beta, nonlin, dt=None):
 
         # Apply the nonlinear operator, transform back to the modified
         # spectrum and return
-        return 1j / exp * fft.ifft(nonlin(t, x, u_))
+        return 1j / exp * G * fft.ifft(nonlin(t, x, u_))
 
     # Configure the solver. We pick ZVODE from ODEPACK which provides
     # error control and adaptive stepping out of the box. Since we are

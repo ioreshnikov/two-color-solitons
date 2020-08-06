@@ -18,7 +18,10 @@ class SolitonTestCases(TestCase):
         """
 
         def sod(f):
-            return -1/2 * f**2
+            return - 1/2 * f**2
+
+        def gamma(f):
+            return 1
 
         def kerr(t, x, u):
             return abs(u)**2 * u
@@ -27,7 +30,7 @@ class SolitonTestCases(TestCase):
         x = numpy.linspace(-20, +20, 1000)
         u0 = 1 / numpy.cosh(x)
 
-        u, v = gnlse(t, x, u0, sod, kerr)
+        u, v = gnlse(t, x, u0, sod, gamma, kerr)
 
         self.assertTrue(all(u[0, :] == u0))
         self.assertLess((abs(u[0, :]) - abs(u[-1, :])).max(), 1E-3)
