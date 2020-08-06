@@ -14,38 +14,90 @@ def _report_progress(n, nt, timer_start):
     progress = (n / nt)
     timer_current = time.time()
     timer_elapsed = timer_current - timer_start
-    timer_eta = timer_elapsed * (1 - progress) / progress
+    timer_left = timer_elapsed * (1 - progress) / progress
 
-    logging.debug(
-        "  %5.2f%%  %6.1fs elapsed  %6.1fs left",
-        100 * progress, timer_elapsed, timer_eta)
+    minutes_elapsed = int(timer_elapsed / 60)
+    seconds_elapsed = int(timer_elapsed % 60)
+
+    minutes_left = int(timer_left / 60)
+    seconds_left = int(timer_left % 60)
+
+    def format_minutes_seconds(minutes, seconds):
+        if minutes > 0:
+            return "%d minutes %02d seconds" % (minutes, seconds)
+        else:
+            return "%02d seconds" % seconds
+
+    logging.info(
+        "  %5.2f%%  %s elapsed  %s left",
+        100 * progress,
+        format_minutes_seconds(minutes_elapsed, seconds_elapsed),
+        format_minutes_seconds(minutes_left, seconds_left))
 
 
-def gnlse(t, x, u0, beta, gamma, nonlin, dt=None):
+class IntegrationResult:
+    """
+    This is a container class for the integration results.
+
+    Parameters
+    ----------
+    u : array_like of shape len(t)×len(x)
+        integrated field in time domain evaluated on a grid
+    v : array_like of shape len(t)×len(x)
+        integrated field in frequency domain evaluated on a grid
+    successful : bool
+        a flag indicating that the integration was successful
+    error_code : int
+        return code of the solver if the integration failed
+
+    Note
+    ----
+    `u` and `v` are output matrices of the integrated field in
+    coordinate-domain and spectral-domain representations. Row number
+    is position in the time array, column number is the position in
+    coordinate/frequency array.
+    """
+
+    def __init__(self, u, v, error_code=None):
+        self.u = u
+        self.v = v
+        self.error_code = error_code
+
+    @property
+    def successful(self):
+        return self.error_code is None
+
+
+def gnlse_propagate(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
     """
     Integrate a GNLSE using the integrating factor method.
 
     This function integrates a generalized version of nonlinear Schödinger
     equation
 
-        i ∂ₜ ũ + β(k) ũ(t, k) + γ(k) F{ N(t, x, u(t, x)) } = 0,
+        ∂ₜ ũ = i β(k) ũ(t, k)
+            + i γ(k) F{ N(t, x, u(t, x)) }
+            + i F{ L(t, x, u(t, x)) },
 
     where ũ(t, k) is the spectrum of the unknown field, β(k) is a
     dispersive operator, and γ(k) is a gain coefficient. u(t, x) is the
     coordinate-domain representation of the same unknown field, and
     nonolinear operator N(t, x, u(t, x)) is defined in terms of that
-    coordinate representation.
+    coordinate representation. L(t, x, u(t, x)) is an auxiliary linear
+    operator that can be used to introduce an absorbing boundary layer.
+    It does not have to have a physical meaning.
 
     The integration is performed using the integrating factor method as
     described by J.M. Dudley & J.R. Taylor in Chapter 3 of Supercontinuum
     Generation in Optical Fibers, CUP 2010. Instead of integrating the
     original equation we restort to integrating a modified version
 
-        i ∂ₜ v + γ(k) F{ N(t, x, u(t, x)) } = 0,
+        ∂ₜ v = i γ(k) F{ N(t, x, u(t, x)) }
+            + i F{ L(t, x, u(t, x)) },
 
     where v = v(t, k) is the modified spectrum that is defined as
 
-        u(t, k) = exp(i β(k) t) v(t, k).
+        ũ(t, k) = exp(i β(k) t) v(t, k).
 
     The modifed equation is supposed to be non-stiff, which allows us to
     apply almost any third-party solver. We chose a scipy-provided wrapper
@@ -64,23 +116,15 @@ def gnlse(t, x, u0, beta, gamma, nonlin, dt=None):
     beta : callable with the signature of beta(f)
         the dispersive profile as a function of frequency
     gamma : callable with the signature of gamma(f)
-        frequency-dependent gain coefficient
+        frequency-dependent gain part of the nonlinear operator
     nonlin : callable with the signature of nonlin(t, x, u)
         time-domain part of the nonlinear operator
+    lin : callable with the signature of lin(t, x, u)
+        time-domain linear operator
 
     Returns
     -------
-    (u, v) : a tuple of complex-valued matrices of shape len(t)×len(x)
-        output matrices of the integrated field in coordinate-domain
-        and spectral-domain representations. Row number is position in
-        the time array, column number is the position in coordinate/frequency
-        array.
-
-    Raises
-    ------
-    RuntimeError
-        when an integration step fails. Please examine the log for
-        the error code
+    result : an instance of IntegrationResult
     """
 
     # Pre-allocate the output matrices.
@@ -108,22 +152,22 @@ def gnlse(t, x, u0, beta, gamma, nonlin, dt=None):
         exp = numpy.exp(1j * D * t_)
         u_ = fft.fft(exp * v_)
 
-        # Apply the nonlinear operator, transform back to the modified
-        # spectrum and return
-        return 1j / exp * G * fft.ifft(nonlin(t, x, u_))
+        # Apply nonlinear operator N() and, maybe, linear operator L()
+        # as well, transform back to the modified spectrum and return.
+        ret = G * fft.ifft(nonlin(t, x, u_))
+        if lin:
+            ret += fft.ifft(lin(t, x, u_))
+
+        return 1j / exp * ret
 
     # Configure the solver. We pick ZVODE from ODEPACK which provides
     # error control and adaptive stepping out of the box. Since we are
-    # working on a modified spectrum, we can assume the problem to be
-    # non-stiff and we pick 4-th order implicit Adams integrator as the
-    # stepper function.
-    ode = integrate.ode(rhs, jac=None)  # XXX: Should we pass a Jacobian?
-    ode.set_integrator(
-        "zvode",
-        method="adams",
-        atol=1E-10,
-        rtol=1E-5,
-        order=4)
+    # working on a modified spectrum, we can hope the problem to be
+    # non-stiff, but it's a good idea *not* to impose the choice of
+    # the integration method and error tolerances -- this will be
+    # estimated by the solver itself.
+    ode = integrate.ode(rhs)
+    ode.set_integrator("zvode")
 
     # Those are the internal loop variables. `t_` holds the current
     # integration time, `v_` is the current modified spectrum.
@@ -131,7 +175,7 @@ def gnlse(t, x, u0, beta, gamma, nonlin, dt=None):
     v_ = v0
 
     timer_start = time.time()
-    logging.debug("Integrating:")
+    logging.info("Integrating:")
 
     for n in range(1, nt):
         _report_progress(n, nt, timer_start)
@@ -162,9 +206,8 @@ def gnlse(t, x, u0, beta, gamma, nonlin, dt=None):
             # Integrate for one step and check the solver status.
             v_ = ode.integrate(t_)
             if not ode.successful():
-                raise RuntimeError(
-                    "integration failed with return code {}"
-                    .format(ode.get_return_code()))
+                return IntegrationResult(
+                    u, v, error_code=ode.get_return_code())
 
         # Calculate the proper spectrum and then save the spectrum and
         # the coordinate representation into the output matrices.
@@ -172,5 +215,5 @@ def gnlse(t, x, u0, beta, gamma, nonlin, dt=None):
         u[n, :] = fft.fft(exp * v_)
         v[n, :] = fft.fftshift(exp * v_)
 
-    logging.debug("%.2fs elapsed", time.time() - timer_start)
-    return u, v
+    logging.info("Done!")
+    return IntegrationResult(u, v)
