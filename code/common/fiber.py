@@ -66,7 +66,7 @@ beta'(f) : array_like
 
 beta2 = lambdify(_omega, _beta.diff(_omega, 2), 'numpy')
 beta2.__doc__ = """
-Second derviative of the Propagation constant in the model fiber
+Second derviative of the propagation constant in the model fiber
 
 This function defines the second derivative of the propagation constant
 in the model fiber as a function of frequency.
@@ -79,7 +79,7 @@ f : array_like
 
 Returns
 -------
-beta'(f) : array_like
+beta''(f) : array_like
     the second derivative of the propagation constant at given frequencies
 """
 

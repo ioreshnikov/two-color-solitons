@@ -28,7 +28,7 @@ def gnlse(t, x, u0, beta, gamma, nonlin, dt=None):
     This function integrates a generalized version of nonlinear Schödinger
     equation
 
-    i ∂ₜ ũ + β(k) ũ(t, k) + γ(k) F{ N(t, x, u(t, x)) } = 0,
+        i ∂ₜ ũ + β(k) ũ(t, k) + γ(k) F{ N(t, x, u(t, x)) } = 0,
 
     where ũ(t, k) is the spectrum of the unknown field, β(k) is a
     dispersive operator, and γ(k) is a gain coefficient. u(t, x) is the
@@ -41,11 +41,11 @@ def gnlse(t, x, u0, beta, gamma, nonlin, dt=None):
     Generation in Optical Fibers, CUP 2010. Instead of integrating the
     original equation we restort to integrating a modified version
 
-    i ∂ₜ v + γ(k) F{ N(t, x, u(t, x)) } = 0,
+        i ∂ₜ v + γ(k) F{ N(t, x, u(t, x)) } = 0,
 
     where v = v(t, k) is the modified spectrum that is defined as
 
-    u(t, k) = exp(i β(k) t) v(t, k).
+        u(t, k) = exp(i β(k) t) v(t, k).
 
     The modifed equation is supposed to be non-stiff, which allows us to
     apply almost any third-party solver. We chose a scipy-provided wrapper
