@@ -1,10 +1,9 @@
 import random
 
 from unittest import TestCase
-from scipy import fft
 import numpy
 
-from .solver import gnlse
+from .solver import gnlse_propagate
 from .helpers import sech, to_analytic
 
 
@@ -35,8 +34,10 @@ class SolitonTestCases(TestCase):
         x = numpy.linspace(-20, +20, 1000)
         u0 = 1 / numpy.cosh(x)
 
-        u, v = gnlse(t, x, u0, sod, gamma, kerr)
+        result = gnlse_propagate(t, x, u0, sod, gamma, kerr)
+        self.assertTrue(result.successful)
 
+        u = result.u
         self.assertTrue(all(u[0, :] == u0))
         self.assertLess((abs(u[0, :]) - abs(u[-1, :])).max(), 1E-3)
 

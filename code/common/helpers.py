@@ -41,7 +41,6 @@ def to_analytic(ut):
 
     Note
     ----
-
     - Computes standard discrete-time 'analytic' signal following Eq. (8)
       in sect. IV of Ref. [1] via the two-step procedure:
 
