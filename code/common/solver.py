@@ -68,7 +68,7 @@ class IntegrationResult:
         return self.error_code is None
 
 
-def gnlse_propagate(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
+def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
     """
     Integrate a GNLSE using the integrating factor method.
 

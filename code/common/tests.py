@@ -3,7 +3,7 @@ import random
 from unittest import TestCase
 import numpy
 
-from .solver import gnlse_propagate
+from .solver import gnlse
 from .helpers import sech, to_analytic
 
 
@@ -34,7 +34,7 @@ class SolitonTestCases(TestCase):
         x = numpy.linspace(-20, +20, 1000)
         u0 = 1 / numpy.cosh(x)
 
-        result = gnlse_propagate(t, x, u0, sod, gamma, kerr)
+        result = gnlse(t, x, u0, sod, gamma, kerr)
         self.assertTrue(result.successful)
 
         u = result.u

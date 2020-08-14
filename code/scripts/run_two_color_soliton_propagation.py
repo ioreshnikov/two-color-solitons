@@ -13,7 +13,7 @@ from common.fiber import (
     gv_matching_frequencies,
     fundamental_soliton_amplitude)
 from common.helpers import sech, to_analytic
-from common.solver import gnlse_propagate
+from common.solver import gnlse
 
 
 parser = argparse.ArgumentParser()
@@ -77,7 +77,7 @@ absorber = (
 
 
 # Integrate the initial condition.
-result = gnlse_propagate(
+result = gnlse(
     z, t, u0,
     filtered_beta, filtered_gamma,
     kerr_op, partial(linear_absorption_op, profile=absorber), dt=10)
