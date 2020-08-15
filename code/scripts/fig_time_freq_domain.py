@@ -3,16 +3,22 @@
 
 from argparse import ArgumentParser
 
-from matplotlib import colors
 from matplotlib import pyplot as plot
+from matplotlib import colors
 from numpy import fft
 import numpy
+
+from common.plotter import pr_setup, pr_publish
 
 
 parser = ArgumentParser()
 parser.add_argument(
     "input",
     help="path to an .npz file with the simulation results",
+    type=str)
+parser.add_argument(
+    "output",
+    help="path to the output image",
     type=str)
 args = parser.parse_args()
 
@@ -32,7 +38,7 @@ f = 2 * numpy.pi * fft.fftshift(f)
 # resolution larger than 1000×1000 pixels.
 
 tw = (t > -500) & (t < +1000)
-fw = (f > 0) & (f < 5)
+fw = (f > 0.5) & (f < 4)
 
 t = t[tw]
 f = f[fw]
@@ -62,24 +68,42 @@ t = t / 1000
 z = z / 10000
 
 
-plot.figure()
+# Finally, we plot everything
+pr_setup()
 
-plot.subplot(1, 2, 1)
+plot.figure(figsize=(4, 3))
+
+# Time domain subplot.
+plot.subplot(2, 1, 1)
 plot.pcolormesh(
-    t, z, abs(u)**2,
+    z, t, abs(u.T)**2,
     cmap="magma",
     norm=colors.LogNorm(vmin=1E-4),
+    rasterized=True,
     shading="auto")
-plot.xlabel(r"$t$, ps")
-plot.ylabel(r"$z$, cm")
+plot.xlim(0, z.max())
+plot.ylim(-0.5, +0.5)
+plot.yticks([-0.5, 0.0, +0.5])
+plot.xlabel(r"Distance $z$, cm")
+plot.ylabel(r"Delay $t$, ps")
 
-plot.subplot(1, 2, 2)
+plot.colorbar()
+
+# Frequency domain subplot.
+plot.subplot(2, 1, 2)
 plot.pcolormesh(
-    f, z, abs(v)**2,
+    z, f, abs(v.T)**2,
     cmap="jet",
     norm=colors.LogNorm(vmin=1E-4),
+    rasterized=True,
     shading="auto")
-plot.xlabel(r"$\omega$, rad/fs")
-plot.ylabel(r"$z$, cm")
+plot.xlim(0, z.max())
+plot.ylim(0.5, 4)
+plot.yticks(list(range(1, 5)))
+plot.xlabel(r"Distance $z$, cm")
+plot.ylabel(r"Freq. $\omega$, rad/fs")
 
-plot.show()
+plot.colorbar()
+
+plot.tight_layout(pad=1.0)
+pr_publish(args.output)
