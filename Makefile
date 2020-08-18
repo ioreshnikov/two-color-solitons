@@ -1,7 +1,7 @@
 # General settings
 # ================
 
-ext = png
+ext = pdf
 
 vpath %.npz npz
 vpath %.$(ext) fig
@@ -135,25 +135,37 @@ scattering_1.085_ue_$(ext): $(addprefix 1.085_ue_, $(addsuffix .$(ext), $(INCIDE
 # Figures and computational targets for the paper
 # ===============================================
 
-# These targets define really nice scattering processes that are not
-# covered by the bruteforce approach.
+# These target defines a really nice scattering processes that is not
+# covered by the brute force approach.
 1.070_1.650.npz: 1.070_seed.npz
 	python code/scripts/run_weak_scattering_on_filtered_soliton.py -fi 1.650 npz/1.070_seed.npz npz/1.070_1.650.npz
 
-Fig1.$(ext): 1.000_seed.npz
-	python code/scripts/fig_time_outspectrum.py --no-rescon npz/1.000_seed.npz fig/Fig1.$(ext)
+Fig1.$(ext): 1.010_seed.npz
+	python code/scripts/fig_time_outspectrum.py --no-rescon npz/1.010_seed.npz fig/Fig1.$(ext)
 
-Fig2.$(ext): 1.000_filt.npz
-	python code/scripts/fig_time_outspectrum.py --vmin 1E-8 npz/1.000_filt.npz fig/Fig2.$(ext)
+Fig2.$(ext): 1.010_filt.npz
+	python code/scripts/fig_time_outspectrum.py --vmin 1E-8 npz/1.010_filt.npz fig/Fig2.$(ext)
 
 Fig3.$(ext): 1.070_1.650.npz
-	python code/scripts/fig_time_outspectrum.py --vmin 5E-7 npz/1.070_1.650.npz fig/Fig3.$(ext)
+	python code/scripts/fig_time_outspectrum.py --vmin 1E-7 npz/1.070_1.650.npz fig/Fig3.$(ext)
 
 Fig4.$(ext): 1.150_1.500.npz
-	python code/scripts/fig_time_outspectrum.py --vmin 5E-7 npz/1.150_1.500.npz fig/Fig4.$(ext)
+	python code/scripts/fig_time_outspectrum.py --vmin 1E-7 npz/1.150_1.500.npz fig/Fig4.$(ext)
 
 Fig5.$(ext): 1.085_ue_3.500.npz
-	python code/scripts/fig_time_outspectrum.py --vmin 5E-7 npz/1.085_ue_3.500.npz fig/Fig5.$(ext)
+	python code/scripts/fig_time_outspectrum.py --vmin 1E-7 npz/1.085_ue_3.500.npz fig/Fig5.$(ext)
 
 .PHONY: fig
 fig: Fig1.$(ext) Fig2.$(ext) Fig3.$(ext) Fig4.$(ext) Fig5.$(ext)
+
+
+# Text targets
+# ============
+
+.PHONY: draft
+draft: fig
+	cp fig/Fig*.$(ext) text/Figures/
+	cd text && pdflatex Draft.tex
+	cd text && bibtex Draft
+	cd text && pdflatex Draft.tex
+	cd text && pdflatex Draft.tex

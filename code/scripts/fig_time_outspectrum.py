@@ -16,8 +16,8 @@ from common.fiber import (
     beta, beta1, gamma,
     estimate_soliton_parameters,
     fundamental_soliton_dispersive_relation)
-from common.helpers import zeros_on_a_grid
-from common.plotter import pr_setup, pr_publish
+from common.helpers import peaks_close_to, zeros_on_a_grid
+from common.plotter import XSMALL_FONT_SIZE, pr_setup, pr_publish
 
 
 parser = ArgumentParser()
@@ -136,8 +136,11 @@ else:
     framei = beta(f1) + beta1(f1) * (fi - f1)
     bi = beta(fi) - framei
 
-    # 1. Resonance due to β(ωₛ) = β(ωᵢ)
-    srfi = zeros_on_a_grid(f, b0 - bi)
+    # 1. Resonance due to β(ωₛ) = β(ωᵢ) (but exclude ωᵢ)
+    srfi = [
+        rf for rf in zeros_on_a_grid(f, b0 - bi)
+        if abs(rf - fi) > 0.01
+    ]
 
     # 2. Resonances due to β(ω) = k₂(ω) - k₁(ω) + β(ωᵢ)
     srf21 = zeros_on_a_grid(f, b0 - k2 + k1 - bi)
@@ -151,11 +154,16 @@ else:
         rfs.extend(srf12)
 
 
+# Filter the resonance frequencies that correspond to a peak in the
+# output spectrum.
+peaks = peaks_close_to(f, v1, rfs)
+
+
 # Finally, we plot everything.
 pr_setup()
 
 npanels = 3
-height_ratios = [1.00, 1.00, 1.00]
+height_ratios = [2/3, 2/3, 1]
 
 if args.no_timedomain:
     npanels -= 1
@@ -166,7 +174,7 @@ if args.no_rescon:
     height_ratios = height_ratios[:-1]
 
 plot.figure(
-    figsize=(3.4, sum(1.4 * h for h in height_ratios)))
+    figsize=(3.2, sum(1.4 * h for h in height_ratios)))
 gs = gridspec.GridSpec(npanels, 1, height_ratios=height_ratios)
 
 
@@ -181,7 +189,8 @@ if not args.no_timedomain:
     plot.subplot(gs[panelidx])
     plot.pcolormesh(
         z, t, u.T**2,
-        cmap="magma",
+        # cmap="inferno",
+        cmap="jet",
         norm=colors.LogNorm(vmin=args.vmin),
         rasterized=True,
         shading="auto")
@@ -194,18 +203,19 @@ if not args.no_timedomain:
 
     plot.annotate(
         panel_label(panelidx),
-        xy=(1.0, 0.0),
-        xytext=(-16.0, +6.0),
+        xy=(0.0, 0.0),
+        xytext=(+6.0, +6.0),
         xycoords="axes fraction",
         textcoords="offset points",
         color="white")
 
     panelidx += 1
 
+
 # Second panel: input and output spectra
 ax = plot.subplot(gs[panelidx])
-plot.plot(f, v0**0.5, color="black", linewidth=0.50, label="in", zorder=10)
-plot.plot(f, v1**0.5, color="gray",  linewidth=1.00, label="out")
+plot.plot(f, v0**0.5, color="black", linewidth=0.5, label="in",  zorder=10)
+plot.plot(f, v1**0.5, color="gray",  linewidth=1.0, label="out", alpha=0.75)
 
 plot.legend(ncol=2, loc="upper center")
 plot.xlim(0.5, 4.0)
@@ -237,6 +247,32 @@ for rf in rfs:
         linewidth=0.25,
         linestyle="dotted",
         zorder=-10)
+
+level = max(pv for _, pv in peaks)
+if "fi" in npz:
+    fi = npz["fi"]
+    idx = abs(f - fi).argmin()
+    level = max(level, v1[idx])
+
+for n, (pf, _) in enumerate(peaks, start=1):
+    plot.annotate(
+        str(n),
+        xy=(pf, level),
+        xytext=(-2.0, +12.0),
+        textcoords="offset points",
+        bbox=dict(boxstyle="circle", pad=0.15, fc="white", ec="black", linewidth=0.5),
+        fontsize=XSMALL_FONT_SIZE)
+
+if "fi" in npz:
+    fi = npz["fi"]
+    plot.annotate(
+        r"$i$",
+        xy=(fi, level),
+        xytext=(-2.0, +12.0),
+        textcoords="offset points",
+        bbox=dict(boxstyle="circle", pad=0.15, fc="white", ec="black", linewidth=0.5),
+        fontsize=XSMALL_FONT_SIZE)
+
 
 # Third panel (optional): Resonance condition
 ax = plot.subplot(gs[panelidx])
@@ -319,7 +355,7 @@ margin = 0.25 * (kmax - kmin)
 pb0 = plot.plot(f, b0, color="black")
 plot.xlim(0.5, 4.0)
 plot.ylim(kmin - margin, kmax + 2*margin)
-plot.ylabel(r"WN $k$, rad/$\mu$m")
+plot.ylabel(r"$k$, rad/$\mu$m")
 plot.xlabel(r"Frequency $\omega$, rad/fs")
 ax.xaxis.set_major_locator(MultipleLocator(0.5))
 
@@ -353,14 +389,15 @@ if "fi" in npz and len(srf21) and len(srf12) and not k12_too_close:
         [pb0[0], Stub],
         [r"$\beta(\omega_{i})$", r"$\mp k_{2} \pm k_{1} + \beta(\omega_{i})$"],
         ncol=ncolumns,
+        loc="upper center",
         handler_map={Stub: FWVMHanlder()})
 else:
     plot.legend(ncol=ncolumns, loc="upper center")
 
 plot.annotate(
     panel_label(panelidx),
-    xy=(1.0, 0.0),
-    xytext=(-16.0, +6.0),
+    xy=(0.0, 0.0),
+    xytext=(+16.0, +6.0),
     xycoords="axes fraction",
     textcoords="offset points",
     bbox=dict(boxstyle="circle", pad=0.1, fc="white", ec="white"))
@@ -372,5 +409,29 @@ for rf in rfs:
         linestyle="dotted",
         zorder=-10)
 
-plot.tight_layout(pad=4.0)
+for n, (pf, _) in enumerate(peaks, start=1):
+    idx = abs(f - pf).argmin()
+    level = b0[idx]
+    plot.annotate(
+        str(n),
+        xy=(pf, level),
+        xytext=(-1.0, -1.0),
+        textcoords="offset points",
+        bbox=dict(boxstyle="circle", pad=0.15, fc="white", ec="black", linewidth=0.5),
+        fontsize=XSMALL_FONT_SIZE)
+
+if "fi" in npz:
+    fi = npz["fi"]
+    idx = abs(f - fi).argmin()
+    level = b0[idx]
+    plot.annotate(
+        r"$i$",
+        xy=(fi, level),
+        xytext=(-1.0, -1.0),
+        textcoords="offset points",
+        bbox=dict(boxstyle="circle", pad=0.15, fc="white", ec="black", linewidth=0.5),
+        fontsize=XSMALL_FONT_SIZE)
+
+
+plot.tight_layout(pad=0.25)
 pr_publish(args.output)

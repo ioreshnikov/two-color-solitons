@@ -1,0 +1,259 @@
+\documentclass[aps, prl, twocolumn, superscriptaddress, final]{revtex4}
+\pdfoutput=1
+
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{tikz}
+
+
+\newcommand{\abs}[1]{\left| #1 \right|}
+\DeclareMathOperator{\sech}{sech}
+
+\newcommand*\circled[1]{
+  \tikz[baseline=(char.base)]{
+    \node[shape=circle,draw,inner sep=0.5pt] (char) {#1};
+  }
+}
+
+
+\begin{document}
+
+\title{Cherenkov radiation and scattering of external dispersive waves by two-color solitons}
+
+\author{Ivan Oreshnikov}
+\email{oreshnikov.ivan@gmail.com}
+\affiliation{Max Planck Institute for Intelligent Systems, Max-Planck-Ring 4, 72076 T\"ubingen, Germany}
+
+\author{Alexey Yulin}
+\affiliation{ITMO University 19701, Kronverskiy pr. 49, St.~Petersburg, Russia}
+
+\begin{abstract}
+  In dispersion landscapes with two separate regions of anomalous dispersion it is possible to create a quasi-stable two-color solitary wave. In this paper we consider how those waves interact with dispersive radiation, including the processes of Cherenkov radiation generation as well as the processes of external wave scattering. We derive the analytic resonance conditions and verify them through numeric experiments.
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+
+From the prior work~\cite{melchert2019soliton} we know that if the dispersion landscape $\beta(\omega)$ has two regions of anomalous dispersion separated by a region of normal dispersion, it is possible to create a quasi-stable configuration of two tightly-coupled solitons each propagating on its own carrier frequency. This coupled state, especially in the process of initial evolution, sheds dispersive waves that resembles Cherenkov radiation that is observed for other types of solitary waves in vast variety of settings~\cite{akhmediev1995cherenkov, afanasjev1996effect, driben2015resonant, conforti2015parametric, oreshnikov2017dispersive}.
+
+\section{Analytic model}
+
+In this section we derive a perturbation theory that explains the resonance conditions that were proposed before, and then we extend to it to describe the process of external waves scattering on the soliton. We consider a generalized version of a nonlinear Schr\"odinger equation
+\begin{equation}
+  \label{eq:GNLSE}
+  i \partial_{z} \tilde u
+    + \beta(\omega) \tilde u(z, \omega)
+    + \gamma(\omega) \mathcal{F} \left\{
+      \abs{u}^{2} u(z, t)
+    \right\}_{(\omega > 0)} = 0.
+\end{equation}
+Here and further tilde indicates a Fourier image of the field and $\mathcal{F}\left\{ \cdots \right\}_{(\omega > 0)}$ is the explicit Fourier transform over the positive frequencies.
+
+\begin{widetext}
+
+\noindent We start by introducing the ansatz that represents the solution as a sum of two single-frequency solitary waves $U_{1, 2}(z, t)$ and a residue radiation $\psi(z, t)$
+\begin{gather}
+  \label{eq:PerturbationAnsatz}
+  u(z, t) = U_{1}(z, t) + U_{2}(z, t) + \psi(z, t) \\
+  \abs{\psi} \ll \abs{U_{1}} \sim \abs{U_{2}}. \nonumber
+\end{gather}
+For the solitary waves $U_{1, 2}(z, t)$ we assume that they satisfy a pair of coupled nonlinear Schr\"odinger equations below
+\begin{equation}
+  \label{eq:CoupledSolitons}
+  i \partial_{z} \tilde U_{n}
+    + \beta_{n}(\omega) \tilde U_{n}(z, \omega)
+    + \gamma(\omega) \mathcal{F} \left\{
+      \abs{U_{n}}^{2} U_{n} + 2 \abs{U_{m}}^{2} U_{n}
+    \right\}_{(\omega > 0)} = 0,
+\end{equation}
+where $n = 1, 2$ and $m = 2, 1 \ne n$. Essentially, this is an assumption that the solitons are coupled strictly by inducing a refractive-index potential on each other, and each soliton exists in some sort of a truncated dispersion landscape that is defined by the operator $\beta_{n}(\omega)$. A reasonable guess for a truncated operator is a parabolic approximation close to the carrier frequency
+\begin{equation}
+  \label{eq:TruncatedDispersionOperator}
+  \beta_{n}(\omega) =
+    \beta(\omega_{n}) +
+    \beta'(\omega_{n}) (\omega - \omega_{n}) +
+    \frac{1}{2} \, \beta''(\omega_{n}) (\omega - \omega_{n})^{2}
+\end{equation}
+We additionally propose that in the frame of reference of the individual soliton the envelope evolves with wavenumber $k_{n}(\omega)$ which we approximate by the wavenumber of the fundamental soliton in the ordinary nonlinear Schr\"odinger equation and a correction from a secondary soliton as
+\begin{equation}
+  \label{eq:SolitonWavenumber}
+  k_{n}(\omega)
+    \approx \frac{\gamma(\omega_{n}) A_{n}^{2}}{2}
+    + \beta(\omega_{n}) + \beta'(\omega_{n}) (\omega - \omega_{n})
+    + \gamma(\omega_{n}) A_{m}^{2}
+\end{equation}
+where $n = 1, 2$, $m = 2, 1 \ne n$ and $A_{n}$ is the soliton amplitude.
+
+By substituting ansatz~\eqref{eq:PerturbationAnsatz} into equation~\eqref{eq:GNLSE}, linearizing with respect to perturbation $\psi(z, \omega)$ and discarding the terms corresponding to the soliton equations~\eqref{eq:CoupledSolitons} we get the equation for $\tilde \psi$
+\begin{multline}
+  \label{eq:PerturbationEquation}
+  i \partial_{z} \tilde \psi
+    + \beta(\omega) \tilde \psi(z, \omega)
+    + \gamma(\omega) \mathcal{F}\left\{
+      2 \abs{U_{1} + U_{2}}^{2} \psi +
+      \left( U_{1} + U_{2} \right)^{2} \psi^{*}
+    \right\}_{(\omega > 0)} = \\
+    - \left[ \beta(\omega) - \beta_{1}(\omega) \right] \tilde U_{1}(z, \omega)
+    - \left[ \beta(\omega) - \beta_{2}(\omega) \right] \tilde U_{2}(z, \omega)
+    - \gamma(\omega) \mathcal{F} \left\{
+      U_{2}^{2} U_{1}^{*} + U_{1}^{2} U_{2}^{*}
+    \right\}_{(\omega > 0)}
+\end{multline}
+In the right-hand's side of equation~\eqref{eq:PerturbationEquation} we see two types of driving terms and each of those terms can be in resonance with the linear dispersive waves that exist in the system, if the particular wavenumber $k(\omega_{*})$ of the driving term is equal to a wavenumber of a dispersive wave $\beta(\omega)$ at some frequency $\omega_{*}$~\cite{akhmediev1995cherenkov, yulin2004four}. The first type of the terms is $\left[ \beta(\omega) - \beta_{n}(\omega) \right] U_{n}(z, \omega)$ which drives the generation of Cherenkov radiation by an individual soliton $U_{n}$ if the following resonance condition is satisfied
+\begin{equation}
+  \label{eq:CherenkovRadiationResonanceCondition}
+  \beta(\omega) = k_{n}(\omega).
+\end{equation}
+The second type of the terms are $\gamma(\omega) \mathcal{F}\left\{ U_{2}^{2} U_{1}^{*} \right\}$ and $\gamma(\omega) \mathcal{F}\left\{ U_{1}^{2} U_{2}^{*} \right\}$ and they correspond to the process of four-wave mixing that in our case results in generation of dispersive radiation at some frequency where
+\begin{equation}
+  \label{eq:FWMRadiationResonanceCondition}
+  \beta(\omega) = 2 k_{n}(\omega)  - k_{m}(\omega).
+\end{equation}
+
+Let us move on to the problem of external dispersive wave scattering. For that we split the perturbation into the incident and the scattered parts
+\begin{equation}
+  \label{eq:PerturbationSplit}
+  \psi(z, t) = \psi_{\text{inc}}(z, t) + \psi_{\text{sc}}(z, t).
+\end{equation}
+We explicitly define $\psi_{\text{inc}}(z, t)$ as a linear wave that is propagating in a soliton-free medium
+\begin{equation}
+  \label{eq:IncidentFieldEquation}
+  i \partial_{z} \tilde \psi_{\text{inc}}(z, t)
+    + \beta(\omega) \tilde \psi_{\text{inc}}(z, t) = 0.
+\end{equation}
+Substituting equation~\eqref{eq:PerturbationSplit} into~\eqref{eq:PerturbationEquation} and eliminating the terms corresponding to~\eqref{eq:IncidentFieldEquation} we are left with equation for the scattered component
+\begin{multline}
+  \label{eq:ScatteredFieldEquation}
+  i \partial_{z} \tilde \psi_{\text{sc}}
+    + \beta(\omega) \tilde \psi_{\text{sc}}(z, \omega)
+    + \gamma(\omega) \mathcal{F}\left\{
+      2 \abs{U_{1} + U_{2}}^{2} \psi_{\text{sc}} +
+      \left( U_{1} + U_{2} \right)^{2} \psi_{\text{sc}}^{*}
+    \right\}_{(\omega > 0)} = \text{\ldots (omitted is the RHS from~\eqref{eq:PerturbationEquation})} \\
+    - \gamma(\omega) \mathcal{F}\left\{
+      2 \left(
+        \abs{U_{1}}^{2} + U_{1} U_{2}^{*} + U_{2} U_{1}^{*} + \abs{U_{2}}^{2}
+      \right) \psi_{\text{inc}} +
+      \left(
+        U_{1}^{2} + 2 \, U_{1} U_{2} + U_{2}^{2}
+      \right) \psi_{\text{inc}}^{*}
+    \right\}_{(\omega > 0)}
+\end{multline}
+\end{widetext}
+
+In addition to the resonance terms already discussed in equation~\eqref{eq:PerturbationEquation} we see the terms that arise due to interaction between the incident radiation and the soliton. In here six new types of resonance behaviour are possible. The first one is due to terms $\abs{U_{1}}^{2} \psi_{\text{inc}}$ and $\abs{U_{2}}^{2} \psi_{\text{inc}}$, both with the resonance condition
+\begin{equation}
+  \label{eq:Type0ResonanceCondition}
+  \beta(\omega_{\text{sc}}) = \beta(\omega_{\text{inc}})
+\end{equation}
+The next two are due to mixed terms $U_{1} U_{2}^{*} \psi_{\text{inc}}$ and $U_{2} U_{1}^{*} \psi_{\text{inc}}$, with the corresponding resonance condition being
+\begin{equation}
+  \label{eq:Type1ResonanceCondition}
+  \beta(\omega_{\text{sc}}) = \pm k_{1} \mp k_{2} + \beta(\omega_{\text{inc}})
+\end{equation}
+Another two are due to $U_{n}^{2} \psi_{\text{inc}}^{*}$ and the resonance condition is
+\begin{equation}
+  \label{eq:Type2ResonanceCondition}
+  \beta(\omega_{\text{sc}}) =
+    2 k_{n}(\omega_{\text{sc}}) -
+    \beta(\omega_{\text{inc}}), ~ n = 1, 2.
+\end{equation}
+The final one is due to $2 U_{1} U_{2} \psi_{\text{inc}}^{*}$ with the resonances at
+\begin{equation}
+  \label{eq:Type3ResonanceCondition}
+  \beta(\omega_{\text{sc}}) =
+    k_{1}(\omega_{\text{sc}}) +
+    k_{2}(\omega_{\text{sc}}) -
+    \beta(\omega_{\text{inc}}).
+\end{equation}
+To verify the predictions given by resonance conditions~\eqref{eq:CherenkovRadiationResonanceCondition},~\eqref{eq:FWMRadiationResonanceCondition},~\eqref{eq:Type0ResonanceCondition},~\eqref{eq:Type1ResonanceCondition},~\eqref{eq:Type2ResonanceCondition}, and~\eqref{eq:Type3ResonanceCondition} we proceed to numeric experiments.
+
+\section{Numeric experiments}
+
+To numerically integrate equation~\eqref{eq:GNLSE} we use the integrating factor method and transform the equation into a non-stiff version for a modified spectrum~\cite{dudley2010supercontinuum}. The modified equation can be handled by any standard ODE solver; we use a \texttt{scipy} interface to \texttt{ZVODE} solver from \texttt{ODEPACK}~\cite{hindmarsh1983odepack, virtanen2020scipy} (the complete set of sources codes used in the paper can be found in~\cite{sources}).
+
+To study Cherenkov radiation of two color solitons we chain two separate simulations. First, following the prior work~\cite{melchert2019soliton}, we produce a two-color soliton by integrating an initial condition that is given by a sum of two fundamental solitons of standard NLSE
+\begin{equation}
+  \label{eq:SeedInitialCondition}
+  u_{0}(t) =
+      A_{1} \sech(t / T_{1}) e^{-i \omega_{1} t} +
+      A_{2} \sech(t / T_{2}) e^{-i \omega_{2} t},
+\end{equation}
+where frequency $\omega_{1}$ is an arbitrary parameter (the only requirement is that it lies in the region of anomalous dispersion) and frequency $\omega_{2}$ is chosen such that group velocities of both the frequency components match
+\begin{equation*}
+  \beta'(\omega_{1}) = \beta'(\omega_{2}).
+\end{equation*}
+In most of the simulations in this paper we fix $T_{1} = T_{2} = 20$~fs and the amplitudes $A_{1}$ and $A_{2}$ are chosen as the fundamental soliton amplitudes at the corresponding frequencies. This configuration sheds significant amount of radiation and relaxes to a quasi-stable solitary wave. An example simulation is shown in Fig.~\ref{fig:Fig1}. We take the output field of this seed simulation and suppress the radiation tails by multiplying it by a super-Gaussian window centered around the soliton peak. This isolated soliton serves as an input to the second simulation that is carried with the same parameters as the original one.
+
+\begin{figure}[t]
+  \includegraphics{{Figures/Fig1}.pdf}
+  \caption{(color online) Formation of a two-color soliton from a fundamental soliton pair with first-component carrier frequency $\omega_{1} = 1.005$, $T_{1} = T_{2} = 20~\text{ps}$. (a) time-domain view (b) input and output spectra.}%
+  \label{fig:Fig1}
+\end{figure}
+
+Once we suppress the initial radiation that is shed by the seed soliton during the relaxation process, the isolated soliton propagates generating a narrow-spectrum Cherenkov radiation. As an example we can consider Fig.~\ref{fig:Fig2}. Panel Fig.~\ref{fig:Fig2}b shows a normalized spectral density at the output of the simulation. There one can notice that on top of the input spectrum (plotted by thin black line) arise two additional spectral lines in the output spectrum (plotted by thicker gray line). Panel Fig.~\ref{fig:Fig3}c demonstrates resonance conditions~\eqref{eq:CherenkovRadiationResonanceCondition} and~\eqref{eq:FWMRadiationResonanceCondition}: black curve corresponds to the left-hand's side of both equations $\beta(\omega)$, horizontal lines correspond to the right-hand's sides. Intersections between the dispersive curve and the horizontal lines that contribute to Cherenkov radiation are marked separately: \circled{1}~is the radiation due to the second component of the soliton as predicted by equation~\eqref{eq:CherenkovRadiationResonanceCondition}, \circled{2}~is due to beat between the components with wavenumber $2 k_{2} - k_{1}$ as predicted by~\eqref{eq:FWMRadiationResonanceCondition}. A symmetric situation (resonances due to the second component and to beat with wavenumber $2 k_{1} - k_{2}$) is very easy to observe, for example, by choosing $\omega_{1} = 1.150$, and we do not picture it here for brevity.
+
+\begin{figure}[t]
+  \includegraphics{{Figures/Fig2}.pdf}
+  \caption{(color online) Cherenkov radiation of an isolated soliton produced by the simulation in Fig.~\ref{fig:Fig1}. (a) time-domain view (b) input and output spectra (c) resonance conditions diagram.}%
+  \label{fig:Fig2}
+\end{figure}
+
+To study the scattering processes we perform the seed simulation and isolate the soliton as we did before. To that we add an incident dispersive wave in the form of a Gaussian pulse
+\begin{equation*}
+  \psi_{inc}(t) = A_{\text{inc}} \exp\left(
+    - \frac{
+      (t - t_{0})^{2}
+    }{
+      T_{\text{inc}}^{2}
+    }
+    - i \omega_{\text{inc}} t
+  \right).
+\end{equation*}
+In this paper we pick $A_{\text{inc}}$ as 1\% of the maximum amplitude of the isolated soliton and fix width to 300~fs. Central location is chosen as $\pm1000$~fs from the soliton center (the sign depends on the relative group velocity between the soliton and the dispersive wave). In the process of evolution the incident radiation interacts with the soliton to produce the scattered radiation. This process can happen in several different ways depending on the frequencies of the soliton and the incident radiation. In here we consider three concrete examples. In each of them the incident radiation is split between three different components.
+
+The first configuration we consider is very close to the degenerate case where the wavenumbers of the individual soliton components $k_{1}$ and $k_{2}$ coincide. Equation~\eqref{eq:Type1ResonanceCondition} then turns into equation~\eqref{eq:Type0ResonanceCondition}. This case resembles the case of fundamental single-component solitons~\cite{yulin2004four}. However, due to shape of the dispersive curve $\beta(\omega)$ there is now more than one nontrivial solution to equation~\eqref{eq:Type0ResonanceCondition} and a single incident frequency corresponds up to four possible resonances. This configuration can be seen in Fig.~\ref{fig:Fig3}. In practice, only some of them actually contribute to the scattered radiation. Again, those solution are separately marked on a diagram on panel~\ref{fig:Fig3}c: \circled{$i$} corresponds both to the incident and the partially transmitted radiation, \circled{1} is the reflected component and \circled{2} is the additional transmitted component.
+
+\begin{figure}[t]
+  \includegraphics{{Figures/Fig3}.pdf}
+  \caption{(color online) Scattering of a weak DW with carrier frequency $\omega_{\text{inc}} = 1.650$ on a soliton with first-component carrier frequency $\omega_{1} = 1.070$. (a) time-domain view (b) input and output spectra (c) resonance conditions diagram.}%
+  \label{fig:Fig3}
+\end{figure}
+
+The second configuration (seen in Fig.~\ref{fig:Fig4}) is a case with significant difference between $k_{1}$ and $k_{2}$. Since~\eqref{eq:Type1ResonanceCondition} is no longer degenerate, the resonance diagram in Fig.~\ref{fig:Fig4}c is more complex. However, as one can notice, in that case only solution marked with \circled{2}, corresponding to the upper (i.e. ``$-, +$'') branch of~\eqref{eq:Type1ResonanceCondition}, contributes to the scattered radiation. Component \circled{1}, corresponding to the scattered radiation, comes from~\eqref{eq:Type0ResonanceCondition}. The unmarked spectral line close to $\omega \approx 2.4$ is the Cherenkov radiation of the soliton itself.
+
+\begin{figure}[t]
+  \includegraphics{{Figures/Fig4}.pdf}
+  \caption{(color online) Scattering of a weak DW with carrier frequency $\omega_{\text{inc}} = 1.500$ on a soliton with first-component carrier frequency $\omega_{1} = 1.150$. (a) time-domain view (b) input and output spectra (c) resonance conditions diagram.}%
+  \label{fig:Fig4}
+\end{figure}
+
+The third configuration (seen in Fig.~\ref{fig:Fig5}) is, in a sense, symmetric to the previous case. In here, again, the difference between $k_{1}$ and $k_{2}$ is significant and equation~\eqref{eq:Type1ResonanceCondition} is far from being degenerate, but in this case the resonances from the lower (i.e. ``$+, -$'') branch of~\eqref{eq:Type1ResonanceCondition} play a significant role. This is achieved by choosing the incident frequency greater than the carrier frequency of the second soliton component and enhanced by using an asymmetric seed soliton with $T_{1} = 30$~fs and $T_{2} = 10$~fs. This creates a solitray wave with the ampltiude of the second component almost equal to the ampltiude of the first component.
+
+\begin{figure}[t]
+  \includegraphics{{Figures/Fig5}.pdf}
+  \caption{(color online) Scattering of a weak DW with carrier frequency $\omega_{\text{inc}} = 3.500$ on a soliton with first-component carrier frequency $\omega_{1} = 1.085$. (a) time-domain view (b) input and output spectra (c) resonance conditions diagram.}%
+  \label{fig:Fig5}
+\end{figure}
+
+Overall, in all our experiments, we have only seen the scattered components corresponding to equations~\eqref{eq:Type0ResonanceCondition} and~\eqref{eq:Type1ResonanceCondition} and have never seen the components predicted~\eqref{eq:Type2ResonanceCondition} and~\eqref{eq:Type3ResonanceCondition}. In other words, the terms proportional to $\psi_{inc}^{*}$ in the right hand's side of equation~\eqref{eq:ScatteredFieldEquation} do not contribute significantly to the scattered radiation.
+
+\section{Conclusion}
+
+\subsection{Acknowledgements}
+
+\bibliographystyle{apsrev4-1}
+\bibliography{Bibliography}
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

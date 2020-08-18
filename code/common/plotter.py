@@ -11,6 +11,10 @@ COLOR_RED = "#e51e10"
 COLOR_BLACK = "#000000"
 COLOR_GREY = "#7f7f7f"
 
+XSMALL_FONT_SIZE = 6
+SMALL_FONT_SIZE = 7
+REGULAR_FONT_SIZE = 8
+
 PGF_PARAMS = {
     "figure.figsize": (3.1, 2.5),
 
@@ -24,20 +28,20 @@ PGF_PARAMS = {
     "axes.unicode_minus": False,
 
     "font.family": "serif",
-    "font.size": 10,
+    "font.size": REGULAR_FONT_SIZE,
 
     "font.monospace": [],
     "font.sans-serif": [],
     "font.serif": [],
 
-    "legend.fontsize": 8,
+    "legend.fontsize": SMALL_FONT_SIZE,
     "legend.frameon": False,
 
-    "xtick.labelsize": 8,
-    "ytick.labelsize": 8,
+    "xtick.labelsize": XSMALL_FONT_SIZE,
+    "ytick.labelsize": XSMALL_FONT_SIZE,
     "grid.linewidth": 0.5,
-    "axes.labelsize": 10,
-    "axes.titlesize": 10,
+    "axes.labelsize": REGULAR_FONT_SIZE,
+    "axes.titlesize": REGULAR_FONT_SIZE,
 
     "lines.linewidth": 0.8,
     "axes.linewidth": 0.5,
