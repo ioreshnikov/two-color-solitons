@@ -94,3 +94,30 @@ def zeros_on_a_grid(x, y):
     xn = x[1:][mask]
 
     return (xp + xn) / 2
+
+
+def filter_tails(x, y, w=100):
+    """
+    Filter the radiative tails from the soliton using a super-Gaussian
+    window.
+
+    Parameters
+    ----------
+    x : array_like
+        coordinate grid
+    y : array_like
+        a soliton with the radiative tails evaluated on a grid
+
+    Returns
+    -------
+    y' : array_like
+        a filtered solution
+    """
+
+    # We construct a super-Gaussian window around the soliton peak.
+    # Multiplying the soliton by that window we suppress the radiation
+    # tails.
+    idx_max = abs(y).argmax()
+    x0 = x[idx_max]
+    window = numpy.exp(- ((x - x0)/w)**8)
+    return window * y

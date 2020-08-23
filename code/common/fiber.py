@@ -136,7 +136,7 @@ def linear_absorption_op(z, t, u, profile):
     return 1j * profile * u
 
 
-def gv_matching_frequencies(f1, beta1=beta1):
+def gv_matching_frequencies(f1):
     """
     Given a frequency find another ones where the group velocity is the
     same.
@@ -210,3 +210,24 @@ def fundamental_soliton_dispersive_relation(f0, t0, f):
     a = fundamental_soliton_amplitude(f0, t0)
     g = gamma(f0)
     return g * a**2 / 2 + beta(f0) + beta1(f0) * (f - f0)
+
+
+def fundamental_soliton_width(amp, f0):
+    """
+    Calculate the fundamental soliton width given the central
+    frequency and the amplitude. Inverse function to
+    `fundamental_soliton_amplitude`.
+
+    Parameters
+    ----------
+    amp : float
+        amplitude of the fundamental soliton in the model fiber
+    f0 : float
+        soliton carrier frequency
+
+    Returns
+    -------
+    t0 : float, optional
+        soliton width
+    """
+    return numpy.sqrt(abs(beta2(f0)) / gamma(f0)) / amp

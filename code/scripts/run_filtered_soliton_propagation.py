@@ -31,8 +31,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "input",
     help="path to the input .npz file",
-    type=str,
-    default=1.000)
+    type=str)
 parser.add_argument(
     "output",
     help="path to the output .npz file",
@@ -82,7 +81,7 @@ u0 = numpy.roll(u0, idx_zero - idx_max)
 # Construct a frequency filtered and group velocity compensated
 # dispersive profile.
 def filtered_beta(f):
-    b = beta(f) - beta(f1) - beta1(f1) * f
+    b = beta(f) - beta(f1) - beta1(f1) * (f - f1)
     b[(f <= 0) | (f >= 0.75 * f.max())] = 0
     return b
 

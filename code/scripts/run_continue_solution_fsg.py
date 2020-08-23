@@ -20,7 +20,6 @@ import logging
 import numpy
 
 from common.fiber import beta, beta1, gamma, kerr_op
-from common.helpers import to_analytic
 from common.solver import gnlse
 
 
@@ -90,7 +89,7 @@ z = numpy.arange(z0, z0 + int(2*numpy.pi/dk), 2)
 # Construct a frequency filtered and group velocity compensated
 # dispersive profile.
 def filtered_beta(f):
-    b = beta(f) - beta(f1) - beta1(f1) * f
+    b = beta(f) - beta(f1) - beta1(f1) * (f - f1)
     b[(f <= 0) | (f >= 0.75 * f.max())] = 0
     return b
 
