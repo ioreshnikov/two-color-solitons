@@ -9,7 +9,7 @@ setup(
         "on two-color solitons."),
     author="Ivan Oreshnikov",
     author_email="oreshnikov.ivan@gmail.com",
-    python_requires=">=3.8",
+    python_requires=">=3.5",
     install_requires=[
         "matplotlib==3.3.0",
         "numpy==1.19.1",

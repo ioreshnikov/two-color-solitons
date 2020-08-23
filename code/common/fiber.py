@@ -10,8 +10,11 @@ use the same unit system throughout the code.
 
 from scipy.constants import c
 from sympy import Symbol
+from scipy.optimize import root_scalar
 from sympy.utilities.lambdify import lambdify
 import numpy
+
+from .helpers import zeros_on_a_grid
 
 
 cumfs = 1E6 * c / 1E15  # speed of light in μm/fs
@@ -127,7 +130,7 @@ def linear_absorption_op(z, t, u, profile):
         coordinate grid, has no effect
     u : array_like
         instantaneous field in time-domain representation
-    absorber : array_like
+    profile : array_like
         absorption coefficient profile
     """
     return 1j * profile * u
@@ -146,35 +149,27 @@ def gv_matching_frequencies(f1, beta1=beta1):
     Returns
     -------
     f2 : list(float)
-        a list of frequencies f such that β₁(f1) = β₁(f2)`
-
-    Note
-    ----
-    Root finding is very crude -- we evaluate beta1() on a very fine grid
-    in the interval [f1 + ε, 5] or [0.5, f1 - ε] (depending on f1) and
-    then return the frequencies where the difference β₁(f) - β₁(f1)
-    changes sign.
+        a list of frequencies f such that β₁(f1) = β₁(f2)
     """
 
-    d = 1E-6
+    d = 1E-2
     if f1 < 2:
         f = numpy.arange(f1 + d, 5.0, d)
     else:
         f = numpy.arange(0.5, f1 - d, d)
     y = beta1(f) - beta1(f1)
 
-    yp = y[:-1]
-    yn = y[1:]
+    f2 = []
+    for f0 in zeros_on_a_grid(f, y):
+        res = root_scalar(
+            lambda f: beta1(f) - beta1(f1), x0=f0 - d, x1=f0 + d)
+        if res.converged:
+            f2.append(res.root)
 
-    mask = (yp * yn) < 0
-
-    fp = f[:-1][mask]
-    fn = f[1:][mask]
-
-    return (fp + fn) / 2
+    return f2
 
 
-def fundamental_soliton_amplitude(f0, t0=1.0):
+def fundamental_soliton_amplitude(f0, t0):
     """
     Calculate fundamental soliton amplitude for the given soliton
     central frequency and the given width.
@@ -183,9 +178,8 @@ def fundamental_soliton_amplitude(f0, t0=1.0):
     ----------
     f0 : float
         soliton carrier frequency
-
     t0 : float, optional
-        soliton width, 1.0 by default
+        soliton width
 
     Returns
     -------
@@ -203,6 +197,8 @@ def fundamental_soliton_dispersive_relation(f0, t0, f):
     ----------
     f0 : float
         soliton carrier frequency
+    t0 : float
+        soliton width
     f : array_like
         an array of frequencies
 

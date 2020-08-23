@@ -71,3 +71,26 @@ def to_analytic(ut):
     zw[1:int(zw.size/2)] = 2 * zw[1:int(zw.size/2)]
     zw[int(zw.size/2)+1:] = 0j
     return fft.fft(zw)
+
+
+def zeros_on_a_grid(x, y):
+    """
+    Given a function evaluated on a grid, find points where the
+    function changes sign.
+
+    Parameters
+    ----------
+    x : array_like
+        coordinate grid
+    y : array_like
+        function evaluated on a grid
+    """
+    yp = y[:-1]
+    yn = y[1:]
+
+    mask = (yp * yn) < 0
+
+    xp = x[:-1][mask]
+    xn = x[1:][mask]
+
+    return (xp + xn) / 2

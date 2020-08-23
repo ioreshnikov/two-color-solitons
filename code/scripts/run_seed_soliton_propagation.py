@@ -1,7 +1,37 @@
 #!/usr/bin/env python3
 
 
-from functools import partial
+__doc__ = """
+This scripts integrates GNLSE with the initial condition given as a
+sum of two fundamental solitons
+
+    u(0, t) = U₁(0, t) + U₂(0, t)
+
+where
+
+    Uₙ(0, t) = Aₙ sech(t/tₙ) exp(-i ωₙ t).
+
+Carrier frequency of the first soliton is passed as parameter `-f1`
+of the script and is equal to `1.0` by default. Soliton duration tₙ
+is fixed at 20 fs and the amplitude is calculated to fit the local
+dispersion coefficient in the fiber.
+
+The computational grid is defined as follows
+
+    t ∈ [-8000, 8000), 2¹⁶ equidistant points
+    z ∈ [0, 10000], 1000 equidistant points
+
+In physical units, that corresponds to propagating the initial
+conditions for 10 cm of the fiber with a step-size of 100 μm.
+While this is good enough if you interested purely in the dynamics,
+it is not fitting if you want to analyze the spatial _spectrum_ of
+the numerical solutions.
+
+For a fine-grained spatial grid integration please refer to
+`run_continue_solution_fsg.py`.
+"""
+
+
 import argparse
 import logging
 
@@ -9,14 +39,24 @@ import numpy
 
 from common.fiber import (
     beta, beta1, beta2,
-    gamma, kerr_op, linear_absorption_op,
+    gamma, kerr_op,
     gv_matching_frequencies,
     fundamental_soliton_amplitude)
 from common.helpers import sech, to_analytic
 from common.solver import gnlse
 
 
-parser = argparse.ArgumentParser()
+logging.basicConfig(level=logging.INFO)
+
+
+parser = argparse.ArgumentParser(
+    description=__doc__,
+    formatter_class=argparse.RawTextHelpFormatter)
+parser.add_argument(
+    "-f1",
+    help="carrier frequency of the first soliton",
+    type=float,
+    default=1.000)
 parser.add_argument(
     "output",
     help="path to the output .npz file",
@@ -24,18 +64,15 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-logging.basicConfig(level=logging.INFO)
-
-
-# Defined the computational grid.
+# Define the computational grid.
 z = numpy.linspace(0, 1E5, int(1E3))
-t = numpy.linspace(-2000, +2000, 2**13)
+t = numpy.linspace(-8000, +8000, 2**16)
 
 # Pick the carrier frequency of the first pulse at then find a
 # frequency for the second pulse by picking a frequency in a region of
 # anomalous dispersion so that the group velocity of both pulses match.
-f1 = 3.0
-f2 = gv_matching_frequencies(f1)[0]
+f1 = args.f1
+f2 = gv_matching_frequencies(f1)[-1]
 
 assert beta2(f1) < 0
 assert beta2(f2) < 0
@@ -43,13 +80,13 @@ assert beta2(f2) < 0
 
 # Define the initial condition as a sum of two fundamental solitons of
 # equal width at the selected frequencies.
-t1 = 25
+t1 = 20
 a1 = fundamental_soliton_amplitude(f1, t1)
-u1 = a1 * sech(t / t1) * numpy.exp(-1j * f1 * t)
+u1 = a1 * sech(t/t1) * numpy.exp(-1j * f1 * t)
 
-t2 = 25
+t2 = 20
 a2 = fundamental_soliton_amplitude(f2, t2)
-u2 = a2 * sech(t / t2) * numpy.exp(-1j * f2 * t)
+u2 = a2 * sech(t/t2) * numpy.exp(-1j * f2 * t)
 
 u0 = to_analytic((u1 + u2).real)
 
@@ -57,7 +94,7 @@ u0 = to_analytic((u1 + u2).real)
 # Construct a frequency filtered and group velocity compensated
 # dispersive profile.
 def filtered_beta(f):
-    b = beta(f) - beta1(f1) * f
+    b = beta(f) - beta(f1) - beta1(f1) * f
     b[(f <= 0) | (f >= 0.75 * f.max())] = 0
     return b
 
@@ -69,18 +106,11 @@ def filtered_gamma(f):
     return g
 
 
-# Add radiation absorber close to the edges of the computational
-# domain.
-absorber = (
-    0.001 * sech((t - t.min()) / 20) +
-    0.001 * sech((t - t.max()) / 20))
-
-
 # Integrate the initial condition.
 result = gnlse(
     z, t, u0,
     filtered_beta, filtered_gamma,
-    kerr_op, partial(linear_absorption_op, profile=absorber), dt=10)
+    kerr_op, dt=10)
 
 if not result.successful:
     logging.error(

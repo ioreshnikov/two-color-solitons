@@ -76,8 +76,8 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
     equation
 
         ∂ₜ ũ = i β(k) ũ(t, k)
-            + i γ(k) F{ N(t, x, u(t, x)) }
-            + i F{ L(t, x, u(t, x)) },
+             + i γ(k) F{ N(t, x, u(t, x)) }
+             + i F{ L(t, x, u(t, x)) },
 
     where ũ(t, k) is the spectrum of the unknown field, β(k) is a
     dispersive operator, and γ(k) is a gain coefficient. u(t, x) is the
@@ -93,7 +93,7 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
     original equation we restort to integrating a modified version
 
         ∂ₜ v = i γ(k) F{ N(t, x, u(t, x)) }
-            + i F{ L(t, x, u(t, x)) },
+             + i F{ L(t, x, u(t, x)) },
 
     where v = v(t, k) is the modified spectrum that is defined as
 
@@ -149,7 +149,7 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
     def rhs(t_, v_):
         # Scale the spectrum by the accumulated phase shift due to
         # the dispersion and transform to coordinate space
-        exp = numpy.exp(1j * D * t_)
+        exp = numpy.exp(1j * D * (t_ - t[0]))
         u_ = fft.fft(exp * v_)
 
         # Apply nonlinear operator N() and, maybe, linear operator L()
@@ -171,7 +171,7 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
 
     # Those are the internal loop variables. `t_` holds the current
     # integration time, `v_` is the current modified spectrum.
-    t_ = 0
+    t_ = t[0]
     v_ = v0
 
     timer_start = time.time()
@@ -211,7 +211,7 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
 
         # Calculate the proper spectrum and then save the spectrum and
         # the coordinate representation into the output matrices.
-        exp = numpy.exp(1j * D * t_)
+        exp = numpy.exp(1j * D * (t_ - t[0]))
         u[n, :] = fft.fft(exp * v_)
         v[n, :] = fft.fftshift(exp * v_)
 
