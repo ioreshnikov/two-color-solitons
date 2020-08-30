@@ -41,8 +41,8 @@ v = v[:, fw]
 
 nx = len(t)
 ny = len(z)
-ssx = int(nx / 1000)
-ssy = int(ny / 1000)
+ssx = int(nx / 1000) or 1
+ssy = int(ny / 1000) or 1
 
 t = t[::ssx]
 f = f[::ssx]
@@ -68,7 +68,7 @@ plot.subplot(1, 2, 1)
 plot.pcolormesh(
     t, z, abs(u)**2,
     cmap="magma",
-    norm=colors.LogNorm(vmin=1E-4),
+    norm=colors.LogNorm(vmin=1E-6),
     shading="auto")
 plot.xlabel(r"$t$, ps")
 plot.ylabel(r"$z$, cm")
@@ -77,7 +77,7 @@ plot.subplot(1, 2, 2)
 plot.pcolormesh(
     f, z, abs(v)**2,
     cmap="jet",
-    norm=colors.LogNorm(vmin=1E-4),
+    norm=colors.LogNorm(vmin=1E-6),
     shading="auto")
 plot.xlabel(r"$\omega$, rad/fs")
 plot.ylabel(r"$z$, cm")

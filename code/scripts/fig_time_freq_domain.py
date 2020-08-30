@@ -78,7 +78,7 @@ plot.subplot(2, 1, 1)
 plot.pcolormesh(
     z, t, abs(u.T)**2,
     cmap="magma",
-    norm=colors.LogNorm(vmin=1E-4),
+    norm=colors.LogNorm(vmin=1E-6),
     rasterized=True,
     shading="auto")
 plot.xlim(0, z.max())
@@ -94,7 +94,7 @@ plot.subplot(2, 1, 2)
 plot.pcolormesh(
     z, f, abs(v.T)**2,
     cmap="jet",
-    norm=colors.LogNorm(vmin=1E-4),
+    norm=colors.LogNorm(vmin=1E-6),
     rasterized=True,
     shading="auto")
 plot.xlim(0, z.max())

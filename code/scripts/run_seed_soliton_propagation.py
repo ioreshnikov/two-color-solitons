@@ -94,7 +94,7 @@ u0 = to_analytic((u1 + u2).real)
 # Construct a frequency filtered and group velocity compensated
 # dispersive profile.
 def filtered_beta(f):
-    b = beta(f) - beta(f1) - beta1(f1) * f
+    b = beta(f) - beta(f1) - beta1(f1) * (f - f1)
     b[(f <= 0) | (f >= 0.75 * f.max())] = 0
     return b
 
