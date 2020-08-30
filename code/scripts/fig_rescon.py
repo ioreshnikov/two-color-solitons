@@ -7,13 +7,14 @@ from matplotlib import colors
 from matplotlib import pyplot as plot
 from matplotlib.ticker import MultipleLocator
 from numpy import fft
+from scipy.optimize import curve_fit
 import numpy
 
 from common.fiber import (
     beta, beta1, gamma,
     fundamental_soliton_dispersive_relation,
     fundamental_soliton_width)
-from common.helpers import filter_tails, zeros_on_a_grid
+from common.helpers import filter_tails, sech, zeros_on_a_grid
 from common.plotter import pr_setup, pr_publish
 
 
@@ -63,11 +64,20 @@ del u  # delete the time-domain matrix to free some memory
 u0 = filter_tails(t, u0)
 v0 = fft.fftshift(fft.ifft(u0))
 
-idx1 = abs(v0[f < 2]).argmax()
-idx2 = abs(v0[f > 2]).argmax()
+# We take a weighted average in left and right hand's sides of the
+# spectrum using square of the spectrum as a weight.
+fl = f[f < 2]
+fr = f[f > 2]
+vl = (abs(v0)**2)[f < 2]
+vr = (abs(v0)**2)[f > 2]
 
-f1 = f[f < 2][idx1]
-f2 = f[f > 2][idx2]
+# The distributions are a bit lopsided, so we suppress the tails and
+# weight using only the dome.
+vl[vl < 0.5 * vl.max()] = 0
+vr[vr < 0.5 * vr.max()] = 0
+
+f1 = sum(fl * vl) / sum(vl)
+f2 = sum(fr * vr) / sum(vr)
 
 u1 = fft.fftshift(fft.fft(v0[f < 2]))
 u2 = fft.fftshift(fft.fft(v0[f > 2]))

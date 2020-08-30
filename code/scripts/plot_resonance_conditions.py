@@ -9,7 +9,9 @@ import numpy
 
 
 from common.fiber import (
-    beta, beta1, gv_matching_frequencies,
+    beta, beta1, gamma,
+    gv_matching_frequencies,
+    fundamental_soliton_amplitude,
     fundamental_soliton_dispersive_relation)
 from common.helpers import zeros_on_a_grid
 
@@ -116,8 +118,14 @@ def update(*_, **__):
     gvm, f2 = fs
 
     b = beta(f) - frame
-    n1 = fundamental_soliton_dispersive_relation(f1, args.t0, f) - frame
-    n2 = fundamental_soliton_dispersive_relation(f2, args.t0, f) - frame
+    a1 = fundamental_soliton_amplitude(f1, args.t0)
+    a2 = fundamental_soliton_amplitude(f2, args.t0)
+    n1 = (
+        fundamental_soliton_dispersive_relation(f1, args.t0, f) +
+        gamma(f1) * a2**2 - frame)
+    n2 = (
+        fundamental_soliton_dispersive_relation(f2, args.t0, f) +
+        gamma(f2) * a1**2 - frame)
 
     f1vline.set_xdata(f1)
     f2vline.set_xdata(f2)
