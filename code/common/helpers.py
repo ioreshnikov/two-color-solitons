@@ -107,6 +107,8 @@ def filter_tails(x, y, w=100):
         coordinate grid
     y : array_like
         a soliton with the radiative tails evaluated on a grid
+    w : float
+        optional window width
 
     Returns
     -------

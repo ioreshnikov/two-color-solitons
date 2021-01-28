@@ -12,6 +12,7 @@ import numpy
 
 from common.fiber import (
     beta, beta1, gamma,
+    estimate_soliton_parameters,
     fundamental_soliton_dispersive_relation,
     fundamental_soliton_width)
 from common.helpers import filter_tails, sech, zeros_on_a_grid
@@ -57,36 +58,18 @@ f = fft.fftfreq(len(t), t[1] - t[0])
 f = 2 * numpy.pi * fft.fftshift(f)
 
 u = npz["u"]
-u0 = u[0, :]
+u0 = u[-1, :]
 
 del u  # delete the time-domain matrix to free some memory
 
-u0 = filter_tails(t, u0)
-v0 = fft.fftshift(fft.ifft(u0))
 
-# We take a weighted average in left and right hand's sides of the
-# spectrum using square of the spectrum as a weight.
-fl = f[f < 2]
-fr = f[f > 2]
-vl = (abs(v0)**2)[f < 2]
-vr = (abs(v0)**2)[f > 2]
-
-# The distributions are a bit lopsided, so we suppress the tails and
-# weight using only the dome.
-vl[vl < 0.5 * vl.max()] = 0
-vr[vr < 0.5 * vr.max()] = 0
-
-f1 = sum(fl * vl) / sum(vl)
-f2 = sum(fr * vr) / sum(vr)
-
-u1 = fft.fftshift(fft.fft(v0[f < 2]))
-u2 = fft.fftshift(fft.fft(v0[f > 2]))
-
-a1 = abs(u1).max()
-a2 = abs(u2).max()
-
-t1 = fundamental_soliton_width(a1, f1)
-t2 = fundamental_soliton_width(a2, f2)
+# From the full output spectrum we estimate the final soliton
+# parameters using the original values as an estimate
+a1 = npz["a1"]; a2 = npz["a2"]
+t1 = npz["t1"]; t2 = npz["t2"]
+f1 = npz["f1"]; f2 = npz["f2"]
+a1, a2, t1, t2, f1, f2 = estimate_soliton_parameters(
+    t, u0, a1, a2, t1, t2, f1, f2)
 
 
 # Now that we're done with the spectrum of the cleaned signal we can
@@ -126,15 +109,22 @@ k = 2 * numpy.pi * fft.fftshift(k)
 # that the dispersive curve fits into the picture somewhat nicely.
 frame = beta(f0) + beta1(f0) * (f - f0)
 
-b = beta(f) - frame
 k1 = fundamental_soliton_dispersive_relation(f1, t1, f) - frame + gamma(f1) * a2**2
 k2 = fundamental_soliton_dispersive_relation(f2, t2, f) - frame + gamma(f2) * a1**2
+b0 = beta(f) - frame
 
-kmin = min(b.min(), k1.min(), k2.min())
-kmax = max(b.max(), k1.max(), k2.max())
+kmin = min(
+    k1.min(), k2.min(),
+    (2*k1 - k2).min(), (2*k2 - k1).min(),
+    b0[(f > f1) & (f < f2)].min())
+kmax = max(k1.max(), k2.max(), b0.max())
 margin = 0.25 * (kmax - kmin)
+
+kmin = kmin - margin
 kmax = kmax + margin
 
+
+# The narrowing itself
 kw = (k > kmin) & (k < kmax)
 
 k = k[kw]
@@ -158,109 +148,34 @@ plot.pcolormesh(
     rasterized=True,
     shading="auto")
 
-plot.plot(
-    f, b,
-    color="white",
-    linewidth=0.5)
-plot.annotate(
-    r"$\beta(\omega)$",
-    xy=(f[0], b[0]),
-    xytext=(5.0, 0.0),
-    xycoords="data",
-    textcoords="offset points",
-    color="white")
+plot.plot(f, b0, color="white")
+plot.plot(f, k1, color="white", linestyle="solid", label="$k_{1}$")
+plot.plot(f, k2, color="white", linestyle="dashed", label="$k_{2}$")
 
-if not fi:
+nlabels = 2
+if any((2*k2 - k1) < b0):
+    nlabels += 1
     plot.plot(
-        f, k1,
+        f, 2*k2 - k1,
         color="white",
-        linewidth=0.5)
-    plot.annotate(
-        r"$k_{1}(\omega)$",
-        xy=(f[-1], k1[-1]),
-        xytext=(-28.0, -12.0),
-        xycoords="data",
-        textcoords="offset points",
-        color="white")
-
-if not fi:
+        linestyle="dotted",
+        label="$2k_{2} - k_{1}$")
+if any((2*k1 - k2) < b0):
+    nlabels += 1
     plot.plot(
-        f, k2,
-        color="white",
-        linewidth=0.5)
-    plot.annotate(
-        r"$k_{2}(\omega)$",
-        xy=(f[-1], k2[-1]),
-        xytext=(-28.0, -12.0),
-        xycoords="data",
-        textcoords="offset points",
-        color="white")
+        f, 2*k1 - k2,
+        color="yellow",
+        linestyle="dotted",
+        label="$2k_{1} - k_{2}$")
 
-if not fi:
-    roots = zeros_on_a_grid(f, 2*k1 - k2 - b)
-    if len(roots):
-        plot.plot(
-            f, 2*k1 - k2,
-            color="white",
-            linewidth=0.5,
-            linestyle="dashed")
-
-if not fi:
-    roots = zeros_on_a_grid(f, 2*k2 - k1 - b)
-    if len(roots):
-        plot.plot(
-            f, 2*k2 - k1,
-            color="white",
-            linewidth=0.5,
-            linestyle="dashed")
-
-bi = None
-if fi:
-    bi = beta(fi) - beta(f0) - beta1(f0) * (fi - f0)
-    plot.plot(
-        f, bi * numpy.ones_like(f),
-        color="white",
-        linewidth=0.5)
-
-if fi:
-    roots = zeros_on_a_grid(f, 2 * k1 - bi - b)
-    if len(roots):
-        plot.plot(
-            f, 2*k1 - bi,
-            color="white",
-            linewidth=0.5,
-            linestyle="dashed")
-
-if fi:
-    roots = zeros_on_a_grid(f, 2 * k2 - bi - b)
-    if len(roots):
-        plot.plot(
-            f, 2*k2 - bi,
-            color="white",
-            linewidth=0.5,
-            linestyle="dashed")
-
-if fi:
-    roots = zeros_on_a_grid(f, k1 + k2 - bi - b)
-    if len(roots):
-        plot.plot(
-            f, k1 + k2 - bi,
-            color="white",
-            linewidth=0.5,
-            linestyle="dashed")
 
 plot.ylim(k.min(), k.max())
 plot.xlabel(r"Frequency $\omega$, rad/fs")
 plot.ylabel(r"Wavenbr. $k$, rad/$\mu$m")
 plot.gca().xaxis.set_major_locator(MultipleLocator(0.5))
-
-plot.annotate(
-    "(c)",
-    xy=(1.0, 1.0),
-    xytext=(-18.0, -12.0),
-    xycoords="axes fraction",
-    textcoords="offset points",
-    color="white")
+legend = plot.legend(ncol=nlabels, loc="upper center")
+for text in legend.get_texts():
+    text.set_color("white")
 
 plot.tight_layout(pad=1.0)
 pr_publish(args.output)
