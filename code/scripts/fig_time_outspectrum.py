@@ -52,7 +52,7 @@ a1, a2, t1, t2, f1, f2 = estimate_soliton_parameters(
 # Now that we have estimated everything, we don't need the full output
 # at the original resolution, so we can start windowing and
 # subsampling the matrices.
-tw = (t > -500) & (t < +500)
+tw = (t > -1000) & (t < +1000)
 t = t[tw]
 u = u[:, tw]
 
@@ -96,21 +96,46 @@ k1 = fundamental_soliton_dispersive_relation(f1, t1, f) - frame + gamma(f1) * a2
 k2 = fundamental_soliton_dispersive_relation(f2, t2, f) - frame + gamma(f2) * a1**2
 b0 = beta(f) - frame
 
-# Resonance frequencies as predicted by the theory
-rf1 = zeros_on_a_grid(f, b0 - k1)
-rf2 = zeros_on_a_grid(f, b0 - k2)
-rf12 = zeros_on_a_grid(f, b0 - 2*k1 + k2)
-rf21 = zeros_on_a_grid(f, b0 - 2*k2 + k1)
+k12_too_close = abs(k1 - k2).max() < 0.01
+# ^^^ for a almost perfect soliton all those resonances will fall
+# very close to the first kind of resonance, so there is no point
+# in plotting them.
 
-# Limits in k (better not to rely on the automatic ones)
-kmin = min(
-    k1.min(), k2.min(),
-    (2*k1 - k2).min(), (2*k2 - k1).min(),
-    b0[(f > f1) & (f < f2)].min())
-kmax = max(k1.max(), k2.max(), b0.max())
-margin = 0.25 * (kmax - kmin)
+rfs = []
+if "fi" not in npz:
+    # Resonance frequencies for Cherenkov radiation as predicted by
+    # the theory:
+    # 1. Cherenkov radiation due to first soliton component.
+    crf1 = zeros_on_a_grid(f, b0 - k1)
+    # 2. Cherenkov radiation due to second soliton component.
+    crf2 = zeros_on_a_grid(f, b0 - k2)
+    # 3. Cherenkov radiation due to FWVM processes between the components.
+    crf12 = zeros_on_a_grid(f, b0 - 2*k1 + k2)
+    crf21 = zeros_on_a_grid(f, b0 - 2*k2 + k1)
+
+    rfs.extend(crf1)
+    rfs.extend(crf2)
+    rfs.extend(crf12)
+    rfs.extend(crf21)
+else:
+    # If it's a scattering problem, then we are interested only in the
+    # scattering resonances.
+    fi = npz["fi"]
+    framei = beta(f1) + beta1(f1) * (fi - f1)
+    bi = beta(fi) - framei
+
+    # 1. Resonance due to β(ωₛ) = β(ωᵢ)
+    srfi = zeros_on_a_grid(f, b0 - bi)
+
+    # 2. Resonances due to β(ω) = k₂(ω) - k₁(ω) + β(ωᵢ)
+    srf21 = zeros_on_a_grid(f, b0 - k2 + k1 - bi)
+
+    rfs.extend(srfi)
+    if not k12_too_close:
+        rfs.extend(srf21)
 
 
+# Finally, we plot everything.
 pr_setup()
 
 plot.figure(figsize=(3.4, 4.2))
@@ -123,8 +148,8 @@ plot.pcolormesh(
     rasterized=True,
     shading="auto")
 plot.xlim(z.min(), z.max())
-plot.ylim(-0.5, +0.5)
-plot.yticks([-0.5, 0.0, +0.5])
+plot.ylim(-1.0, +1.0)
+plot.yticks([-1.0, 0.0, +1.0])
 plot.xlabel(r"Distance $z$, cm")
 plot.ylabel(r"Delay $t$, ps")
 plot.colorbar()
@@ -138,19 +163,21 @@ plot.annotate(
     color="white")
 
 ax = plot.subplot(3, 1, 2)
-plot.plot(f, v0**0.5, color="gray", label="in", zorder=10)
-plot.plot(f, v1**0.5, color="black", label="out")
+plot.plot(f, v0**0.5, color="gray",  linewidth=1.5,  label="in", zorder=-10)
+plot.plot(f, v1**0.5, color="black", linewidth=0.5, label="out")
 
-for rfs in rf1, rf2, rf21, rf12:
-    for rf in rfs:
-        plot.axvline(x=rf, color="gray", linewidth=0.25, linestyle="dotted", zorder=-10)
+for rf in rfs:
+    plot.axvline(
+        x=rf, color="gray",
+        linewidth=0.25,
+        linestyle="dotted",
+        zorder=-10)
 
 plot.legend(ncol=2, loc="upper center")
 plot.xlim(0.5, 4.0)
 plot.ylim(0.0, 1.1)
-# plot.ylim(1E-4, 5.0)
 plot.xlabel(r"Frequency $\omega$, rad/fs")
-plot.ylabel(r"$\left| \tilde u(\omega) \right|$, a.\,u.")
+plot.ylabel(r"$\left| \tilde u(\omega) \right|^{1/2}$, a.\,u.")
 ax.xaxis.set_major_locator(MultipleLocator(0.5))
 
 plot.annotate(
@@ -161,39 +188,88 @@ plot.annotate(
     textcoords="offset points")
 
 ax = plot.subplot(3, 1, 3)
-plot.plot(f, k1, color="black", linestyle="solid", label="$k_{1}$")
-plot.plot(f, k2, color="black", linestyle="dashed", label="$k_{2}$")
 
-nlabels = 2
-if any((2*k2 - k1) < b0):
-    nlabels += 1
-    plot.plot(
-        f, 2*k2 - k1,
-        color="black",
+for rf in rfs:
+    plot.axvline(
+        x=rf, color="gray",
+        linewidth=0.25,
         linestyle="dotted",
-        label="$2k_{2} - k_{1}$")
-if any((2*k1 - k2) < b0):
-    nlabels += 1
-    plot.plot(
-        f, 2*k1 - k2,
-        color="gray",
-        linestyle="dotted",
-        label="$2k_{1} - k_{2}$")
+        zorder=-10)
 
-for rfs in rf1, rf2, rf21, rf12:
-    for rf in rfs:
-        plot.axvline(
-            x=rf, color="gray",
-            linewidth=0.25,
+# Limits in k (better not to rely on the automatic ones)
+kmins = [k1.min(), k2.min(), b0[(f > f1) & (f < f2)].min()]
+kmaxs = [k1.max(), k2.max(), b0.max()]
+
+if "fi" not in npz:
+    # Again, if it's not a scattering problem, we deal only with
+    # Cherenkov radiation.
+    plot.plot(f, k1, color="black", linestyle="solid", label="$k_{1}$")
+    plot.plot(f, k2, color="black", linestyle="dashed", label="$k_{2}$")
+
+    ncolumns = 2
+    if any((2*k2 - k1) < b0):
+        ncolumns += 1
+        plot.plot(
+            f, 2*k2 - k1,
+            color="black",
             linestyle="dotted",
-            zorder=-10)
+            label="$2k_{2} - k_{1}$")
+    if any((2*k1 - k2) < b0):
+        ncolumns += 1
+        plot.plot(
+            f, 2*k1 - k2,
+            color="gray",
+            linestyle="dotted",
+            label="$2k_{1} - k_{2}$")
+
+    kmins.extend([
+        (2*k1 - k2).min(),
+        (2*k2 - k1).min()
+    ])
+else:
+    # In case of a scattering problem we plot only the scattering
+    # resonances.
+    ncolumns = 0
+
+    if len(srfi) > 1:
+        ncolumns += 1
+        plot.plot(
+            f, bi * numpy.ones_like(f),
+            color="black",
+            linestyle="solid",
+            label=r"$\beta(\omega_{i})$")
+
+    # if len(srf12) > 0 and not k12_too_close:
+    #     ncolumns += 1
+    #     plot.plot(
+    #         f, k1 - k2 + bi,
+    #         color="black",
+    #         linestyle="dashed",
+    #         label=r"$k_{1} - k_{2} + \beta(\omega_{i})$")
+
+    if len(srf21) > 0 and not k12_too_close:
+        ncolumns += 1
+        plot.plot(
+            f, k2 - k1 + bi,
+            color="gray",
+            linestyle="dashed",
+            label=r"$k_{2} - k_{1} + \beta(\omega_{i})$")
+
+    kmins.extend([
+        # (k1 - k2 + bi).min(),
+        (k2 - k1 + bi).min(),
+    ])
+
+kmin = min(kmins)
+kmax = max(kmaxs)
+margin = 0.25 * (kmax - kmin)
 
 plot.plot(f, b0, color="black")
 plot.xlim(0.5, 4.0)
 plot.ylim(kmin - margin, kmax + 2*margin)
 plot.xlabel(r"Frequency $\omega$, rad/fs")
 ax.xaxis.set_major_locator(MultipleLocator(0.5))
-plot.legend(ncol=nlabels, loc="upper center")
+plot.legend(ncol=ncolumns, loc="upper center")
 
 plot.annotate(
     "(c)",

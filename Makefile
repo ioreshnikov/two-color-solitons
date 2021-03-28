@@ -29,6 +29,9 @@ figs:
 # family of parameters, but almost none of it makes it to the final
 # paper. We leave them here for posterity.
 
+# Seed propagation, filtered solutions and Cherenkov radiation
+# ------------------------------------------------------------
+
 # Define all the seed frequencies to check
 SEED_FREQS = $(shell seq -f "1.%03.0f" 0 5 150)
 
@@ -40,14 +43,8 @@ endef
 
 # This macros defines a filtered soliton target
 define make-filt-computation-target
-$(addsuffix _filt.npz, $1): data $(addsuffix _seed.npz, $1)
+$(addsuffix _filt.npz, $1): $(addsuffix _seed.npz, $1)
 	python code/scripts/run_filtered_soliton_propagation.py data/$(strip $1)_seed.npz data/$(strip $1)_filt.npz
-endef
-
-# This macros defines a FSG target for filtered result
-define make-fsg-computation-target
-$(addsuffix _fsg.npz, $1): data $(addsuffix _filt.npz, $1)
-	python code/scripts/run_continue_solution_fsg.py data/$(strip $1)_filt.npz data/$(strip $1)_fsg.npz
 endef
 
 # This macros plots the propagation results for the seed soliton
@@ -62,19 +59,11 @@ $(addsuffix _filt.$(ext), $1): figs $(addsuffix _filt.npz, $1)
 	python code/scripts/fig_time_outspectrum.py data/$(strip $1)_filt.npz figs/$(strip $1)_filt.$(ext)
 endef
 
-# This macros defines a plotting target for FSG results
-define make-fsg-plotting-target
-$(addsuffix _fsg.$(ext), $1): figs $(addsuffix _fsg.npz, $1)
-	python code/scripts/fig_rescon.py data/$(strip $1)_fsg.npz figs/$(strip $1)_fsg.$(ext)
-endef
-
 $(foreach freq, $(SEED_FREQS), $(eval $(call make-seed-computation-target, $(freq))))
 $(foreach freq, $(SEED_FREQS), $(eval $(call make-filt-computation-target, $(freq))))
-$(foreach freq, $(SEED_FREQS), $(eval $(call make-fsg-computation-target,  $(freq))))
 
 $(foreach freq, $(SEED_FREQS), $(eval $(call make-seed-plotting-target, $(freq))))
 $(foreach freq, $(SEED_FREQS), $(eval $(call make-filt-plotting-target, $(freq))))
-$(foreach freq, $(SEED_FREQS), $(eval $(call make-fsg-plotting-target,  $(freq))))
 
 .PHONY: seed_npz
 seed_npz: $(addsuffix _seed.npz, $(SEED_FREQS))
@@ -88,14 +77,44 @@ filt_npz: $(addsuffix _filt.npz, $(SEED_FREQS))
 .PHONY: filt_$(ext)
 filt_$(ext): $(addsuffix _filt.$(ext), $(SEED_FREQS))
 
-.PHONY: fsg_npz
-fsg_npz: $(addsuffix _fsg.npz, $(SEED_FREQS))
+# Weak dispersive waves scattering
+# --------------------------------
 
-.PHONY: fsg_$(ext)
-fsg_$(ext): $(addsuffix _fsg.$(ext), $(SEED_FREQS))
+INCIDENT_FREQS = $(shell seq -f "%1.3f" 1.100 0.100 3.000)
 
-.PHONY: npz
-npz: seed_npz filt_npz fsg_npz
+# This macros defines a scattering target for a fixed seed soliton
+define make-weak-scattering-computation-target
+$(addprefix $(addsuffix _, $1), $(addsuffix .npz, $2)): $(addsuffix _seed, $1).npz
+	python code/scripts/run_weak_scattering_on_filtered_soliton.py -fi $2 data/$(strip $1)_seed.npz data/$(strip $1)_$(strip $2).npz
+endef
 
-.PHONY: $(ext)
-$(ext): seed_$(ext) filt_$(ext) fsg_$(ext)
+# This macros defines a plotting target for the previous scattering problem
+define make-weak-scattering-plotting-target
+$(addprefix $(addsuffix _, $1), $(addsuffix .$(ext), $2)): $(addprefix $(addsuffix _, $1), $(addsuffix .npz, $2))
+	python code/scripts/fig_time_outspectrum.py data/$(strip $1)_$(strip $2).npz figs/$(strip $1)_$(strip $2).$(ext)
+endef
+
+$(foreach freq, $(INCIDENT_FREQS), $(eval $(call make-weak-scattering-computation-target, 1.005, $(freq))))
+$(foreach freq, $(INCIDENT_FREQS), $(eval $(call make-weak-scattering-computation-target, 1.070, $(freq))))
+$(foreach freq, $(INCIDENT_FREQS), $(eval $(call make-weak-scattering-computation-target, 1.150, $(freq))))
+$(foreach freq, $(INCIDENT_FREQS), $(eval $(call make-weak-scattering-plotting-target,    1.005, $(freq))))
+$(foreach freq, $(INCIDENT_FREQS), $(eval $(call make-weak-scattering-plotting-target,    1.070, $(freq))))
+$(foreach freq, $(INCIDENT_FREQS), $(eval $(call make-weak-scattering-plotting-target,    1.150, $(freq))))
+
+.PHONY: scattering_1.005_npz
+scattering_1.005_npz: $(addprefix 1.005_, $(addsuffix .npz, $(INCIDENT_FREQS)))
+
+.PHONY: scattering_1.070_npz
+scattering_1.079_npz: $(addprefix 1.070_, $(addsuffix .npz, $(INCIDENT_FREQS)))
+
+.PHONY: scattering_1.150_npz
+scattering_1.150_npz: $(addprefix 1.150_, $(addsuffix .npz, $(INCIDENT_FREQS)))
+
+.PHONY: scattering_1.005_$(ext)
+scattering_1.005_$(ext): $(addprefix 1.005_, $(addsuffix .$(ext), $(INCIDENT_FREQS)))
+
+.PHONY: scattering_1.070_$(ext)
+scattering_1.070_$(ext): $(addprefix 1.070_, $(addsuffix .$(ext), $(INCIDENT_FREQS)))
+
+.PHONY: scattering_1.150_$(ext)
+scattering_1.150_$(ext): $(addprefix 1.150_, $(addsuffix .$(ext), $(INCIDENT_FREQS)))
