@@ -1,8 +1,10 @@
 # General settings
 # ================
 
+ext = png
+
 vpath %.npz data
-vpath %.png figs
+vpath %.$(ext) figs
 
 # Preliminary targets
 # ===================
@@ -17,8 +19,13 @@ figs:
 	@echo "Creating the output figure directory"
 	mkdir figs
 
-# Computational targets
-# =====================
+# Brute-force computational targets
+# =================================
+
+# The targets in these section are left from the period of active
+# research. They do computations and exploratory plotting on a large
+# family of parameters, but almost none of it makes it to the final
+# paper. We leave them here for posterity.
 
 # Define all the seed frequencies to check
 SEED_FREQS = $(shell seq -f "1.%03.0f" 0 5 150)
@@ -43,20 +50,20 @@ endef
 
 # This macros plots the propagation results for the seed soliton
 define make-seed-plotting-target
-$(addsuffix _seed.png, $1): figs $(addsuffix _seed.npz, $1)
-	python code/scripts/fig_time_outspectrum.py data/$(strip $1)_seed.npz figs/$(strip $1)_seed.png
+$(addsuffix _seed.$(ext), $1): figs $(addsuffix _seed.npz, $1)
+	python code/scripts/fig_time_outspectrum.py data/$(strip $1)_seed.npz figs/$(strip $1)_seed.$(ext)
 endef
 
 # This macros plots the propagation results for the seed soliton
 define make-filt-plotting-target
-$(addsuffix _filt.png, $1): figs $(addsuffix _filt.npz, $1)
-	python code/scripts/fig_time_outspectrum.py data/$(strip $1)_filt.npz figs/$(strip $1)_filt.png
+$(addsuffix _filt.$(ext), $1): figs $(addsuffix _filt.npz, $1)
+	python code/scripts/fig_time_outspectrum.py data/$(strip $1)_filt.npz figs/$(strip $1)_filt.$(ext)
 endef
 
 # This macros defines a plotting target for FSG results
 define make-fsg-plotting-target
-$(addsuffix _fsg.png, $1): figs $(addsuffix _fsg.npz, $1)
-	python code/scripts/fig_rescon.py data/$(strip $1)_fsg.npz figs/$(strip $1)_fsg.png
+$(addsuffix _fsg.$(ext), $1): figs $(addsuffix _fsg.npz, $1)
+	python code/scripts/fig_rescon.py data/$(strip $1)_fsg.npz figs/$(strip $1)_fsg.$(ext)
 endef
 
 # Generate seed targets for every frequency
@@ -71,23 +78,23 @@ $(foreach freq, $(SEED_FREQS), $(eval $(call make-fsg-plotting-target,  $(freq))
 .PHONY: seed_npz
 seed_npz: $(addsuffix _seed.npz, $(SEED_FREQS))
 
-.PHONY: seed_png
-seed_png: $(addsuffix _seed.png, $(SEED_FREQS))
+.PHONY: seed_$(ext)
+seed_$(ext): $(addsuffix _seed.$(ext), $(SEED_FREQS))
 
 .PHONY: filt_npz
 filt_npz: $(addsuffix _filt.npz, $(SEED_FREQS))
 
-.PHONY: filt_png
-filt_png: $(addsuffix _filt.png, $(SEED_FREQS))
+.PHONY: filt_$(ext)
+filt_$(ext): $(addsuffix _filt.$(ext), $(SEED_FREQS))
 
 .PHONY: fsg_npz
 fsg_npz: $(addsuffix _fsg.npz, $(SEED_FREQS))
 
-.PHONY: fsg_png
-fsg_png: $(addsuffix _fsg.png, $(SEED_FREQS))
+.PHONY: fsg_$(ext)
+fsg_$(ext): $(addsuffix _fsg.$(ext), $(SEED_FREQS))
 
 .PHONY: npz
 npz: seed_npz filt_npz fsg_npz
 
-.PHONY: png
-png: seed_png filt_png fsg_png
+.PHONY: $(ext)
+$(ext): seed_$(ext) filt_$(ext) fsg_$(ext)
