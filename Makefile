@@ -6,6 +6,7 @@ ext = png
 vpath %.npz data
 vpath %.$(ext) figs
 
+
 # Preliminary targets
 # ===================
 
@@ -18,6 +19,7 @@ data:
 figs:
 	@echo "Creating the output figure directory"
 	mkdir figs
+
 
 # Brute-force computational targets
 # =================================
@@ -66,15 +68,14 @@ $(addsuffix _fsg.$(ext), $1): figs $(addsuffix _fsg.npz, $1)
 	python code/scripts/fig_rescon.py data/$(strip $1)_fsg.npz figs/$(strip $1)_fsg.$(ext)
 endef
 
-# Generate seed targets for every frequency
 $(foreach freq, $(SEED_FREQS), $(eval $(call make-seed-computation-target, $(freq))))
 $(foreach freq, $(SEED_FREQS), $(eval $(call make-filt-computation-target, $(freq))))
 $(foreach freq, $(SEED_FREQS), $(eval $(call make-fsg-computation-target,  $(freq))))
+
 $(foreach freq, $(SEED_FREQS), $(eval $(call make-seed-plotting-target, $(freq))))
 $(foreach freq, $(SEED_FREQS), $(eval $(call make-filt-plotting-target, $(freq))))
 $(foreach freq, $(SEED_FREQS), $(eval $(call make-fsg-plotting-target,  $(freq))))
 
-# And one huge phony target combining all of them
 .PHONY: seed_npz
 seed_npz: $(addsuffix _seed.npz, $(SEED_FREQS))
 
