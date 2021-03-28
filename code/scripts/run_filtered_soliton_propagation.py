@@ -4,12 +4,13 @@
 __doc__ = """
 This script takes an output of `run_seed_soliton_propagation`, filters
 the radiation tails from the soliton, shifts the center back to zero
-and then integrates it for one centimeter more.
+and then integrates it further for another 10 cm with the same step of
+10 μm.
 
-This script is here mostly so that we can check if the stationary state
-produced by the seed soliton is stationary enough. It is also very useful
-to be used as a template for scattering simulations, since one can reuse
-the filtering and shifting code as is.
+This script is here mostly so that we can check if the stationary
+state produced by the seed soliton is stationary enough. It is also
+very useful to be used as a template for scattering simulations, since
+one can reuse the filtering and shifting code as is.
 """
 
 
@@ -55,9 +56,9 @@ f1 = npz["f1"]
 f2 = npz["f2"]
 
 
-# Of course we don't want to use the original z grid -- it's just too
-# large. Let's run the simulation for 1 cm.
-z = numpy.linspace(0, 1E4, int(1E3))
+# We run the simulation for 10 cm more. Should be enough to really see
+# the structure of the radiation in a clean setting.
+z = numpy.linspace(0, 1E5, int(1E3))
 
 
 # We construct a super-Gaussian window around the soliton peak.
@@ -96,7 +97,8 @@ def filtered_gamma(f):
 # Integrate the initial condition.
 result = gnlse(
     z, t, u0,
-    filtered_beta, filtered_gamma, kerr_op)
+    filtered_beta, filtered_gamma,
+    kerr_op, dt=10)
 
 if not result.successful:
     logging.error(

@@ -41,6 +41,13 @@ class IntegrationResult:
 
     Parameters
     ----------
+    t : array_like
+        an array of time points where the integrated function is
+        evaluated
+    x : array_like
+        the coordinate grid
+    k : array_like
+        the frequency grid
     u : array_like of shape len(t)×len(x)
         integrated field in time domain evaluated on a grid
     v : array_like of shape len(t)×len(x)
@@ -58,7 +65,10 @@ class IntegrationResult:
     coordinate/frequency array.
     """
 
-    def __init__(self, u, v, error_code=None):
+    def __init__(self, t, x, k, u, v, error_code=None):
+        self.t = t
+        self.x = x
+        self.k = k
         self.u = u
         self.v = v
         self.error_code = error_code
@@ -167,7 +177,7 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
     # the integration method and error tolerances -- this will be
     # estimated by the solver itself.
     ode = integrate.ode(rhs)
-    ode.set_integrator("zvode")
+    ode.set_integrator("zvode", rtol=1E-6)
 
     # Those are the internal loop variables. `t_` holds the current
     # integration time, `v_` is the current modified spectrum.
@@ -216,4 +226,6 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
         v[n, :] = fft.fftshift(exp * v_)
 
     logging.info("Done!")
-    return IntegrationResult(u, v)
+
+    k = fft.fftshift(k)
+    return IntegrationResult(t, x, k, u, v)

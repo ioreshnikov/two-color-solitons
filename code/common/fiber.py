@@ -9,12 +9,13 @@ use the same unit system throughout the code.
 
 
 from scipy.constants import c
+from scipy import fft
+from scipy.optimize import minimize, root_scalar
 from sympy import Symbol
-from scipy.optimize import root_scalar
 from sympy.utilities.lambdify import lambdify
 import numpy
 
-from .helpers import zeros_on_a_grid
+from .helpers import filter_tails, sech, zeros_on_a_grid
 
 
 cumfs = 1E6 * c / 1E15  # speed of light in μm/fs
@@ -162,7 +163,7 @@ def gv_matching_frequencies(f1):
     f2 = []
     for f0 in zeros_on_a_grid(f, y):
         res = root_scalar(
-            lambda f: beta1(f) - beta1(f1), x0=f0 - d, x1=f0 + d)
+            lambda f: beta1(f) - beta1(f1), x0=f0 - d, x1=f0 + d, xtol=1E-4)
         if res.converged:
             f2.append(res.root)
 
@@ -231,3 +232,103 @@ def fundamental_soliton_width(amp, f0):
         soliton width
     """
     return numpy.sqrt(abs(beta2(f0)) / gamma(f0)) / amp
+
+
+def estimate_soliton_parameters(x, y, a1, a2, t1, t2, f1, f2, w=100):
+    """
+    Estimate the parameters of the soliton in the field.
+
+    The estimation procedure is a bit involved. We construct a time-domain
+    representation as a sum of two solitons each with a non-fixed
+    amplitude, width and central frequency. For that trial solution we try
+    to minimize the difference between the trial spectrum envelope and a
+    true spectrum envelope. This miminization procedure is preformed in
+    three passes:
+
+        1. We look for all the parameters -- amplitudes, widths and
+           central frequencies of all the solitons. This gives us a really
+           good match, but central frequencies of the solitons have
+           different group velocities.
+
+        2. Then keeping the amplitudes and the widths of the solitons, we
+           try to alter the central frequency of the first soliton, while
+           taking the central frequency of the second soliton as a
+           group-velocity matched one.
+
+        3. Then keeping the frequencies and the widths of the solitons, we
+           finally try to adjust the amplitude of the first soliton.
+
+    This gives more or less nice results.
+
+    Parameters
+    ----------
+    x : array_like
+        coordinate grid
+    y : array_like
+        a soliton with the radiative tails evaluated on a grid
+    a1, a2, t1, t2, f1, f2: float
+        initial estimates for amplitude, width and frequency of both solitons
+    w : float
+        optional window width
+
+    Returns
+    -------
+    a1, a2, t1, t2, f1, f2: tuple of float
+        a 6-tuple of refined soliton parameters -- ampltiudes, temporal widths
+        and central frequencies
+    """
+
+    y = filter_tails(x, y, w)
+
+    f = fft.fftfreq(len(x), x[1] - x[0])
+    f = 2 * numpy.pi * fft.fftshift(f)
+    v = fft.fftshift(fft.ifft(y))
+
+    fw = (f > 0.5) & (f < 4.0)
+    f = f[fw]
+    v = v[fw]
+
+    def envelope_loss(a1, a2, t1, t2, f1, f2):
+        y_est = (
+            a1 * sech(x/t1) * numpy.exp(-1j * f1 * x) +
+            a2 * sech(x/t2) * numpy.exp(-1j * f2 * x))
+        v_est = fft.fftshift(fft.ifft(y_est))
+        v_est = v_est[fw]
+
+        envelope_loss = abs(abs(v) - abs(v_est)).sum()
+        envelope_loss /= abs(v).sum()
+
+        return envelope_loss
+
+    def every_parameter_loss(args):
+        return envelope_loss(*args)
+
+    def frequency_loss(args, a1, a2, t1, t2):
+        f1, *_ = args
+        f2 = gv_matching_frequencies(f1)
+
+        if not f2:
+            return 1E6
+        else:
+            f2 = f2[-1]
+
+        return envelope_loss(a1, a2, t1, t2, f1, f2)
+
+    def ampltidue_loss(args, a2, t1, t2, f1, f2):
+        a1, *_ = args
+        return envelope_loss(a1, a2, t1, t2, f1, f2, )
+
+    result = minimize(
+        every_parameter_loss, (a1, a2, t1, t2, f1, f2))
+    a1, a2, t1, t2, f1, f2 = result.x
+
+    result = minimize(
+        frequency_loss, (f1, ), args=(a1, a2, f1, f2))
+    f1 = result.x
+    f2 = gv_matching_frequencies(f1)[-1]
+
+    result = minimize(
+        ampltidue_loss, (a1, ), args=(a2, t1, t2, f1, f2))
+    a1 = result.x
+
+    return a1, a2, t1, t2, f1, f2
