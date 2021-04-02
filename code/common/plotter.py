@@ -1,6 +1,15 @@
 import matplotlib
 from matplotlib import pyplot as plot
 
+COLOR_BLUE1 = "#0072b2"
+COLOR_GREEN = "#009e73"
+COLOR_VIOLET = "#9400d3"
+COLOR_ORANGE = "#e69f00"
+COLOR_YELLOW = "#f0e442"
+COLOR_BLUE2 = "#56b4e9"
+COLOR_RED = "#e51e10"
+COLOR_BLACK = "#000000"
+COLOR_GREY = "#7f7f7f"
 
 PGF_PARAMS = {
     "figure.figsize": (3.1, 2.5),
@@ -35,9 +44,9 @@ PGF_PARAMS = {
 
     "axes.prop_cycle": plot.cycler(
         "color", [
-            "#0072b2", "#009e73", "#9400d3",
-            "#e69f00", "#f0e442", "#56b4e9",
-            "#e51e10", "#000000", "#7f7f7f"
+            COLOR_BLUE1, COLOR_GREEN, COLOR_VIOLET,
+            COLOR_ORANGE, COLOR_YELLOW, COLOR_BLUE2,
+            COLOR_RED, COLOR_BLACK, COLOR_GREY
         ]),
 }
 

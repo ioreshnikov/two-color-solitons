@@ -20,6 +20,15 @@ from common.plotter import pr_setup, pr_publish
 
 parser = ArgumentParser()
 parser.add_argument(
+    "--no-rescon",
+    help="hide resonance conditions panel",
+    action="store_true")
+parser.add_argument(
+    "--vmin",
+    help="minimun value for intensity plots",
+    type=float,
+    default=1E-6)
+parser.add_argument(
     "input",
     help="path to an .npz file with the simulation results",
     type=str)
@@ -138,13 +147,19 @@ else:
 # Finally, we plot everything.
 pr_setup()
 
-plot.figure(figsize=(3.4, 4.2))
+if args.no_rescon:
+    npanels = 2
+else:
+    npanels = 3
 
-plot.subplot(3, 1, 1)
+plot.figure(figsize=(3.4, npanels * 1.4))
+
+# First panel: time-domain plot
+plot.subplot(npanels, 1, 1)
 plot.pcolormesh(
     z, t, u.T**2,
     cmap="magma",
-    norm=colors.LogNorm(vmin=1E-6),
+    norm=colors.LogNorm(vmin=args.vmin),
     rasterized=True,
     shading="auto")
 plot.xlim(z.min(), z.max())
@@ -162,16 +177,10 @@ plot.annotate(
     textcoords="offset points",
     color="white")
 
-ax = plot.subplot(3, 1, 2)
-plot.plot(f, v0**0.5, color="gray",  linewidth=1.5,  label="in", zorder=-10)
-plot.plot(f, v1**0.5, color="black", linewidth=0.5, label="out")
-
-for rf in rfs:
-    plot.axvline(
-        x=rf, color="gray",
-        linewidth=0.25,
-        linestyle="dotted",
-        zorder=-10)
+# Second panel: input and output spectra
+ax = plot.subplot(npanels, 1, 2)
+plot.plot(f, v0**0.5, color="black", linewidth=0.50, label="in", zorder=10)
+plot.plot(f, v1**0.5, color="gray",  linewidth=1.00, label="out")
 
 plot.legend(ncol=2, loc="upper center")
 plot.xlim(0.5, 4.0)
@@ -187,7 +196,11 @@ plot.annotate(
     xycoords="axes fraction",
     textcoords="offset points")
 
-ax = plot.subplot(3, 1, 3)
+if args.no_rescon:
+    # If we don't plot the resonance conditions we're done.
+    plot.tight_layout(pad=4.0)
+    pr_publish(args.output)
+    exit()
 
 for rf in rfs:
     plot.axvline(
@@ -195,6 +208,9 @@ for rf in rfs:
         linewidth=0.25,
         linestyle="dotted",
         zorder=-10)
+
+# Third panel: Resonance condition
+ax = plot.subplot(npanels, 1, 3)
 
 # Limits in k (better not to rely on the automatic ones)
 kmins = [k1.min(), k2.min(), b0[(f > f1) & (f < f2)].min()]
@@ -239,14 +255,6 @@ else:
             linestyle="solid",
             label=r"$\beta(\omega_{i})$")
 
-    # if len(srf12) > 0 and not k12_too_close:
-    #     ncolumns += 1
-    #     plot.plot(
-    #         f, k1 - k2 + bi,
-    #         color="black",
-    #         linestyle="dashed",
-    #         label=r"$k_{1} - k_{2} + \beta(\omega_{i})$")
-
     if len(srf21) > 0 and not k12_too_close:
         ncolumns += 1
         plot.plot(
@@ -255,10 +263,7 @@ else:
             linestyle="dashed",
             label=r"$k_{2} - k_{1} + \beta(\omega_{i})$")
 
-    kmins.extend([
-        # (k1 - k2 + bi).min(),
-        (k2 - k1 + bi).min(),
-    ])
+    kmins.append((k2 - k1 + bi).min())
 
 kmin = min(kmins)
 kmax = max(kmaxs)
@@ -267,6 +272,7 @@ margin = 0.25 * (kmax - kmin)
 plot.plot(f, b0, color="black")
 plot.xlim(0.5, 4.0)
 plot.ylim(kmin - margin, kmax + 2*margin)
+plot.ylabel(r"WN $k$, rad/$\mu$m")
 plot.xlabel(r"Frequency $\omega$, rad/fs")
 ax.xaxis.set_major_locator(MultipleLocator(0.5))
 plot.legend(ncol=ncolumns, loc="upper center")
@@ -278,5 +284,12 @@ plot.annotate(
     xycoords="axes fraction",
     textcoords="offset points")
 
-plot.tight_layout(pad=1.0)
+for rf in rfs:
+    plot.axvline(
+        x=rf, color="gray",
+        linewidth=0.25,
+        linestyle="dotted",
+        zorder=-10)
+
+plot.tight_layout(pad=4.0)
 pr_publish(args.output)
