@@ -22,9 +22,9 @@ import logging
 
 import numpy
 
-from common.fiber import beta, beta1, gamma, kerr_op, gv_matching_frequencies
+from common.fiber import beta, beta1, gamma, kerr_op
 from common.solver import gnlse
-from common.helpers import to_analytic
+from common.helpers import filter_tails, to_analytic
 
 
 logging.basicConfig(level=logging.INFO)
@@ -34,19 +34,18 @@ parser = argparse.ArgumentParser(
     description=__doc__,
     formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument(
-    "input",
-    help="path to the input .npz file",
-    type=str)
-parser.add_argument(
     "-fi",
     help="frequency of the incident dispersive wave",
     type=float,
     default=2.000)
 parser.add_argument(
+    "input",
+    help="path to the input .npz file",
+    type=str)
+parser.add_argument(
     "output",
     help="path to the output .npz file",
-    type=str,
-    default=1.000)
+    type=str)
 args = parser.parse_args()
 
 
@@ -65,21 +64,15 @@ f1 = npz["f1"]
 f2 = npz["f2"]
 
 
-# We construct a super-Gaussian window around the soliton peak.
-# Multiplying the soliton by that window we suppress the radiation
-# tails.
+# We suppress the radiation tails.
 u0 = u[-1, :]
-idx_max = abs(u0).argmax()
-t0 = t[idx_max]
-w0 = 100
-
-window = numpy.exp(- ((t - t0)/w0)**8)
-u0 = window * u0
+u0 = filter_tails(t, u0)
 
 
 # We also perform a shift of the solution so that the center of the
 # soliton is at the origin t=0.
 idx_zero = abs(t).argmin()
+idx_max = abs(u0).argmax()
 u0 = numpy.roll(u0, idx_zero - idx_max)
 
 
@@ -87,15 +80,12 @@ u0 = numpy.roll(u0, idx_zero - idx_max)
 # first we pick the amplitude.
 ai = 0.01 * abs(u0).max()
 fi = args.fi
-ti = 100
-t0 = 400
+ti =  300
+t0 = 1000
 logging.info("DW amplitude is {:.3f}".format(ai))
 
 
 # Let's calculate the parameters of the scattering process.
-fs = gv_matching_frequencies(f1)
-logging.info("ZDW is at {:.3f}".format(fs[0]))
-
 vg = beta1(fi) - beta1(f1)
 
 if t0 * vg > 0:
@@ -113,11 +103,14 @@ u0 = to_analytic(u0.real + dw.real)
 # Find the coordinate that should correspond to the middle of the
 # collision process.
 zc = abs(t0) / abs(vg)
-logging.info("z = {} should be the middle of collision".format(zc))
+logging.info("z = {:.3f} cm should be the middle of collision".format(zc / 10000))
 
 
 # We create the distance grid symmetric to the collision point.
-z = numpy.linspace(0, 2 * zc, int(1E3))
+zmax = min(2 * zc, 2E5)
+logging.info("picking z = {:.3f} cm as simulation endpoint".format(zmax / 10000))
+
+z = numpy.linspace(0, zmax, int(1E3))
 
 
 # Construct a frequency filtered and group velocity compensated
