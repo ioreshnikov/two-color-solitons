@@ -1,7 +1,7 @@
 # General settings
 # ================
 
-ext = pdf
+ext = png
 
 vpath %.npz npz
 vpath %.$(ext) fig
@@ -42,7 +42,7 @@ endef
 # This macros plots the propagation results for the seed soliton
 define make-filt-plotting-target
 $(addsuffix _filt.$(ext), $1): $(addsuffix _filt.npz, $1)
-	python code/scripts/fig_time_outspectrum.py npz/$(strip $1)_filt.npz fig/$(strip $1)_filt.$(ext)
+	python code/scripts/fig_time_outspectrum.py --vmin 1E-8 npz/$(strip $1)_filt.npz fig/$(strip $1)_filt.$(ext)
 endef
 
 $(foreach freq, $(SEED_FREQS), $(eval $(call make-seed-computation-target, $(freq))))
@@ -63,10 +63,24 @@ filt_npz: $(addsuffix _filt.npz, $(SEED_FREQS))
 .PHONY: filt_$(ext)
 filt_$(ext): $(addsuffix _filt.$(ext), $(SEED_FREQS))
 
+# XXX: One wild guess. An uneven seed.
+1.085_ue_seed.npz:
+	python code/scripts/run_seed_soliton_propagation.py -f1 1.085 -t1 30.000 -t2 10.000  npz/1.085_ue_seed.npz
+
+1.085_ue_filt.npz: 1.085_ue_seed.npz
+	python code/scripts/run_filtered_soliton_propagation.py npz/1.085_ue_seed.npz npz/1.085_ue_filt.npz
+
+1.085_ue_seed.$(ext): 1.085_ue_seed.npz
+	python code/scripts/fig_time_outspectrum.py npz/1.085_ue_seed.npz fig/1.085_ue_seed.$(ext)
+
+1.085_ue_filt.$(ext): 1.085_ue_filt.npz
+	python code/scripts/fig_time_outspectrum.py --vmin 1E-8 npz/1.085_ue_filt.npz fig/1.085_ue_filt.$(ext)
+
 # Weak dispersive waves scattering
 # --------------------------------
 
-INCIDENT_FREQS = $(shell seq -f "%1.3f" 1.100 0.100 3.000)
+INCIDENT_FREQS_1 = $(shell seq -f "%1.3f" 1.100 0.100 3.000)
+INCIDENT_FREQS_2 = $(shell seq -f "%1.3f" 3.000 0.100 3.500)
 
 # This macros defines a scattering target for a fixed seed soliton
 define make-weak-scattering-computation-target
@@ -80,36 +94,47 @@ $(addprefix $(addsuffix _, $1), $(addsuffix .$(ext), $2)): $(addprefix $(addsuff
 	python code/scripts/fig_time_outspectrum.py npz/$(strip $1)_$(strip $2).npz fig/$(strip $1)_$(strip $2).$(ext)
 endef
 
-$(foreach freq, $(INCIDENT_FREQS), $(eval $(call make-weak-scattering-computation-target, 1.005, $(freq))))
-$(foreach freq, $(INCIDENT_FREQS), $(eval $(call make-weak-scattering-computation-target, 1.070, $(freq))))
-$(foreach freq, $(INCIDENT_FREQS), $(eval $(call make-weak-scattering-computation-target, 1.150, $(freq))))
-$(foreach freq, $(INCIDENT_FREQS), $(eval $(call make-weak-scattering-plotting-target,    1.005, $(freq))))
-$(foreach freq, $(INCIDENT_FREQS), $(eval $(call make-weak-scattering-plotting-target,    1.070, $(freq))))
-$(foreach freq, $(INCIDENT_FREQS), $(eval $(call make-weak-scattering-plotting-target,    1.150, $(freq))))
+$(foreach freq, $(INCIDENT_FREQS_1), $(eval $(call make-weak-scattering-computation-target, 1.005, $(freq))))
+$(foreach freq, $(INCIDENT_FREQS_1), $(eval $(call make-weak-scattering-plotting-target,    1.005, $(freq))))
+
+$(foreach freq, $(INCIDENT_FREQS_1), $(eval $(call make-weak-scattering-computation-target, 1.070, $(freq))))
+$(foreach freq, $(INCIDENT_FREQS_1), $(eval $(call make-weak-scattering-plotting-target,    1.070, $(freq))))
+
+$(foreach freq, $(INCIDENT_FREQS_1), $(eval $(call make-weak-scattering-computation-target, 1.150, $(freq))))
+$(foreach freq, $(INCIDENT_FREQS_1), $(eval $(call make-weak-scattering-plotting-target,    1.150, $(freq))))
+
+$(foreach freq, $(INCIDENT_FREQS_2), $(eval $(call make-weak-scattering-computation-target, 1.085_ue, $(freq))))
+$(foreach freq, $(INCIDENT_FREQS_2), $(eval $(call make-weak-scattering-plotting-target,    1.085_ue, $(freq))))
 
 .PHONY: scattering_1.005_npz
-scattering_1.005_npz: $(addprefix 1.005_, $(addsuffix .npz, $(INCIDENT_FREQS)))
+scattering_1.005_npz: $(addprefix 1.005_, $(addsuffix .npz, $(INCIDENT_FREQS_1)))
 
 .PHONY: scattering_1.070_npz
-scattering_1.070_npz: $(addprefix 1.070_, $(addsuffix .npz, $(INCIDENT_FREQS)))
+scattering_1.070_npz: $(addprefix 1.070_, $(addsuffix .npz, $(INCIDENT_FREQS_1)))
+
+.PHONY: scattering_1.085_npz
+scattering_1.150_npz: $(addprefix 1.085_ue_, $(addsuffix .npz, $(INCIDENT_FREQS_1)))
 
 .PHONY: scattering_1.150_npz
-scattering_1.150_npz: $(addprefix 1.150_, $(addsuffix .npz, $(INCIDENT_FREQS)))
+scattering_1.150_npz: $(addprefix 1.150_, $(addsuffix .npz, $(INCIDENT_FREQS_1)))
 
 .PHONY: scattering_1.005_$(ext)
-scattering_1.005_$(ext): $(addprefix 1.005_, $(addsuffix .$(ext), $(INCIDENT_FREQS)))
+scattering_1.005_$(ext): $(addprefix 1.005_, $(addsuffix .$(ext), $(INCIDENT_FREQS_1)))
 
 .PHONY: scattering_1.070_$(ext)
-scattering_1.070_$(ext): $(addprefix 1.070_, $(addsuffix .$(ext), $(INCIDENT_FREQS)))
+scattering_1.070_$(ext): $(addprefix 1.070_, $(addsuffix .$(ext), $(INCIDENT_FREQS_1)))
 
 .PHONY: scattering_1.150_$(ext)
-scattering_1.150_$(ext): $(addprefix 1.150_, $(addsuffix .$(ext), $(INCIDENT_FREQS)))
+scattering_1.150_$(ext): $(addprefix 1.150_, $(addsuffix .$(ext), $(INCIDENT_FREQS_1)))
+
+.PHONY: scattering_1.085_ue_$(ext)
+scattering_1.085_ue_$(ext): $(addprefix 1.085_ue_, $(addsuffix .$(ext), $(INCIDENT_FREQS_2)))
 
 
 # Figures and computational targets for the paper
 # ===============================================
 
-# This target defines a really nice scattering process which is not
+# These targets define really nice scattering processes that are not
 # covered by the bruteforce approach.
 1.070_1.650.npz: 1.070_seed.npz
 	python code/scripts/run_weak_scattering_on_filtered_soliton.py -fi 1.650 npz/1.070_seed.npz npz/1.070_1.650.npz
@@ -117,20 +142,17 @@ scattering_1.150_$(ext): $(addprefix 1.150_, $(addsuffix .$(ext), $(INCIDENT_FRE
 Fig1.$(ext): 1.000_seed.npz
 	python code/scripts/fig_time_outspectrum.py --no-rescon npz/1.000_seed.npz fig/Fig1.$(ext)
 
-Fig2.$(ext): 1.005_filt.npz
-	python code/scripts/fig_time_outspectrum.py --vmin 1E-8 npz/1.005_filt.npz fig/Fig2.$(ext)
+Fig2.$(ext): 1.000_filt.npz
+	python code/scripts/fig_time_outspectrum.py --vmin 1E-8 npz/1.000_filt.npz fig/Fig2.$(ext)
 
-Fig3.$(ext): 1.070_filt.npz
-	python code/scripts/fig_time_outspectrum.py --vmin 1E-8 npz/1.070_filt.npz fig/Fig3.$(ext)
+Fig3.$(ext): 1.070_1.650.npz
+	python code/scripts/fig_time_outspectrum.py --vmin 5E-7 npz/1.070_1.650.npz fig/Fig3.$(ext)
 
-Fig4.$(ext): 1.150_filt.npz
-	python code/scripts/fig_time_outspectrum.py --vmin 1E-8 npz/1.150_filt.npz fig/Fig4.$(ext)
+Fig4.$(ext): 1.150_1.500.npz
+	python code/scripts/fig_time_outspectrum.py --vmin 5E-7 npz/1.150_1.500.npz fig/Fig4.$(ext)
 
-Fig5.$(ext): 1.005_1.600.npz
-	python code/scripts/fig_time_outspectrum.py npz/1.005_1.600.npz fig/Fig5.$(ext)
-
-Fig6.$(ext): 1.070_1.650.npz
-	python code/scripts/fig_time_outspectrum.py npz/1.070_1.650.npz fig/Fig6.$(ext)
+Fig5.$(ext): 1.085_ue_3.500.npz
+	python code/scripts/fig_time_outspectrum.py --vmin 5E-7 npz/1.085_ue_3.500.npz fig/Fig5.$(ext)
 
 .PHONY: fig
-fig: Fig1.$(ext) Fig2.$(ext) Fig3.$(ext) Fig4.$(ext) Fig5.$(ext) Fig6.$(ext)
+fig: Fig1.$(ext) Fig2.$(ext) Fig3.$(ext) Fig4.$(ext) Fig5.$(ext)

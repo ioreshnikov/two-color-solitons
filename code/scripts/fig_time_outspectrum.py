@@ -5,14 +5,16 @@ from argparse import ArgumentParser
 
 from matplotlib import pyplot as plot
 from matplotlib import colors
+from matplotlib import gridspec
 from matplotlib.ticker import MultipleLocator
+from matplotlib.legend_handler import HandlerBase
+
 from numpy import fft
 import numpy
 
 from common.fiber import (
     beta, beta1, gamma,
     estimate_soliton_parameters,
-    fundamental_soliton_amplitude,
     fundamental_soliton_dispersive_relation)
 from common.helpers import zeros_on_a_grid
 from common.plotter import pr_setup, pr_publish
@@ -102,9 +104,6 @@ z = z / 10000
 # relations for the solitons and the medium.
 frame = beta(f1) + beta1(f1) * (f - f1)
 
-a1 = fundamental_soliton_amplitude(f1, t1)
-a2 = fundamental_soliton_amplitude(f2, t2)
-
 k1 = fundamental_soliton_dispersive_relation(f1, t1, f) - frame + gamma(f1) * a2**2
 k2 = fundamental_soliton_dispersive_relation(f2, t2, f) - frame + gamma(f2) * a1**2
 b0 = beta(f) - frame
@@ -143,32 +142,43 @@ else:
     # 2. Resonances due to β(ω) = k₂(ω) - k₁(ω) + β(ωᵢ)
     srf21 = zeros_on_a_grid(f, b0 - k2 + k1 - bi)
 
+    # 3. Resonances due to β(ω) = k₁(ω) - k₂(ω) + β(ωᵢ)
+    srf12 = zeros_on_a_grid(f, b0 - k1 + k2 - bi)
+
     rfs.extend(srfi)
     if not k12_too_close:
         rfs.extend(srf21)
+        rfs.extend(srf12)
 
 
 # Finally, we plot everything.
 pr_setup()
 
 npanels = 3
+height_ratios = [1.00, 1.00, 1.00]
 
 if args.no_timedomain:
     npanels -= 1
+    height_ratios = height_ratios[1:]
 
 if args.no_rescon:
     npanels -= 1
+    height_ratios = height_ratios[:-1]
 
-plot.figure(figsize=(3.4, npanels * 1.4))
+plot.figure(
+    figsize=(3.4, sum(1.4 * h for h in height_ratios)))
+gs = gridspec.GridSpec(npanels, 1, height_ratios=height_ratios)
 
-panelidx = 1
+
+panelidx = 0
 def panel_label(n):
     """Render panel label based on panel index"""
-    return "({})".format(chr(ord("a") + n - 1))
+    return "({})".format(chr(ord("a") + n))
+
 
 # First panel (optional): time-domain plot
 if not args.no_timedomain:
-    plot.subplot(npanels, 1, panelidx)
+    plot.subplot(gs[panelidx])
     plot.pcolormesh(
         z, t, u.T**2,
         cmap="magma",
@@ -193,13 +203,13 @@ if not args.no_timedomain:
     panelidx += 1
 
 # Second panel: input and output spectra
-ax = plot.subplot(npanels, 1, panelidx)
+ax = plot.subplot(gs[panelidx])
 plot.plot(f, v0**0.5, color="black", linewidth=0.50, label="in", zorder=10)
 plot.plot(f, v1**0.5, color="gray",  linewidth=1.00, label="out")
 
 plot.legend(ncol=2, loc="upper center")
 plot.xlim(0.5, 4.0)
-plot.ylim(0.0, 1.1)
+plot.ylim(0.0, 1.4)
 plot.xlabel(r"Frequency $\omega$, rad/fs")
 plot.ylabel(r"$\left| \tilde u(\omega) \right|^{1/2}$, a.\,u.")
 ax.xaxis.set_major_locator(MultipleLocator(0.5))
@@ -209,7 +219,8 @@ plot.annotate(
     xy=(1.0, 1.0),
     xytext=(-16.0, -12.0),
     xycoords="axes fraction",
-    textcoords="offset points")
+    textcoords="offset points",
+    bbox=dict(boxstyle="circle", pad=0.1, fc="white", ec="white"))
 
 panelidx += 1
 
@@ -219,6 +230,7 @@ if args.no_rescon:
     pr_publish(args.output)
     exit()
 
+
 for rf in rfs:
     plot.axvline(
         x=rf, color="gray",
@@ -227,11 +239,11 @@ for rf in rfs:
         zorder=-10)
 
 # Third panel (optional): Resonance condition
-ax = plot.subplot(npanels, 1, panelidx)
+ax = plot.subplot(gs[panelidx])
 
 # Limits in k (better not to rely on the automatic ones)
-kmins = [k1.min(), k2.min(), b0[(f > f1) & (f < f2)].min()]
-kmaxs = [k1.max(), k2.max(), b0.max()]
+kmins = [b0[(f > f1) & (f < f2)].min()]
+kmaxs = [b0.max()]
 
 if "fi" not in npz:
     # Again, if it's not a scattering problem, we deal only with
@@ -256,8 +268,16 @@ if "fi" not in npz:
             label="$2k_{1} - k_{2}$")
 
     kmins.extend([
+        k1.min(),
+        k2.min(),
         (2*k1 - k2).min(),
         (2*k2 - k1).min()
+    ])
+    kmaxs.extend([
+        k1.max(),
+        k2.max(),
+        (2*k1 - k2).max(),
+        (2*k2 - k1).max()
     ])
 else:
     # In case of a scattering problem we plot only the scattering
@@ -272,34 +292,78 @@ else:
             linestyle="solid",
             label=r"$\beta(\omega_{i})$")
 
-    if len(srf21) > 0 and not k12_too_close:
+    if len(srf21) and not k12_too_close:
         ncolumns += 1
         plot.plot(
             f, k2 - k1 + bi,
             color="gray",
             linestyle="dashed",
             label=r"$k_{2} - k_{1} + \beta(\omega_{i})$")
+        kmins.append((k2 - k1 + bi).min())
+        kmaxs.append((k2 - k1 + bi).max())
 
-    kmins.append((k2 - k1 + bi).min())
+    if len(srf12) and not k12_too_close:
+        ncolumns += 1
+        plot.plot(
+            f, k1 - k2 + bi,
+            color="gray",
+            linestyle="dotted",
+            label=r"$k_{1} - k_{2} + \beta(\omega_{i})$")
+        kmins.append((k1 - k2 + bi).min())
+        kmaxs.append((k1 - k2 + bi).max())
 
 kmin = min(kmins)
 kmax = max(kmaxs)
 margin = 0.25 * (kmax - kmin)
 
-plot.plot(f, b0, color="black")
+pb0 = plot.plot(f, b0, color="black")
 plot.xlim(0.5, 4.0)
 plot.ylim(kmin - margin, kmax + 2*margin)
 plot.ylabel(r"WN $k$, rad/$\mu$m")
 plot.xlabel(r"Frequency $\omega$, rad/fs")
 ax.xaxis.set_major_locator(MultipleLocator(0.5))
-plot.legend(ncol=ncolumns, loc="upper center")
+
+if "fi" in npz and len(srf21) and len(srf12) and not k12_too_close:
+    # Ok, this is a bit more complicated :) If we try to draw the
+    # legend as usual then the labels will not fit. What we want to do
+    # is to combine the labels for FWVM resonances into one (with ±
+    # and ∓ signs) and stack the line markers according to the signs.
+    # This requires a separate legend handler. I am following this answer:
+    #
+    #     https://stackoverflow.com/a/41765095
+
+    class Stub:
+        pass
+
+    class FWVMHanlder(HandlerBase):
+        def create_artists(self, legend, orig_handle, x0, y0, width, height, fontsize, trans):
+            line1 = plot.Line2D(
+                [x0, x0 + width],
+                [0.7 * height, 0.7 * height],
+                color="gray",
+                linestyle="dashed")
+            line2 = plot.Line2D(
+                [x0, x0 + width],
+                [0.3 * height, 0.3 * height],
+                color="gray",
+                linestyle="dotted")
+            return [line1, line2]
+
+    plot.legend(
+        [pb0[0], Stub],
+        [r"$\beta(\omega_{i})$", r"$\mp k_{2} \pm k_{1} + \beta(\omega_{i})$"],
+        ncol=ncolumns,
+        handler_map={Stub: FWVMHanlder()})
+else:
+    plot.legend(ncol=ncolumns, loc="upper center")
 
 plot.annotate(
     panel_label(panelidx),
-    xy=(1.0, 1.0),
-    xytext=(-16.0, -12.0),
+    xy=(1.0, 0.0),
+    xytext=(-16.0, +6.0),
     xycoords="axes fraction",
-    textcoords="offset points")
+    textcoords="offset points",
+    bbox=dict(boxstyle="circle", pad=0.1, fc="white", ec="white"))
 
 for rf in rfs:
     plot.axvline(
