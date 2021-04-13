@@ -91,7 +91,7 @@ $(foreach freq, $(INCIDENT_FREQS), $(eval $(call make-weak-scattering-plotting-t
 scattering_1.005_npz: $(addprefix 1.005_, $(addsuffix .npz, $(INCIDENT_FREQS)))
 
 .PHONY: scattering_1.070_npz
-scattering_1.079_npz: $(addprefix 1.070_, $(addsuffix .npz, $(INCIDENT_FREQS)))
+scattering_1.070_npz: $(addprefix 1.070_, $(addsuffix .npz, $(INCIDENT_FREQS)))
 
 .PHONY: scattering_1.150_npz
 scattering_1.150_npz: $(addprefix 1.150_, $(addsuffix .npz, $(INCIDENT_FREQS)))
