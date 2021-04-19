@@ -12,9 +12,10 @@ where
     Uₙ(0, t) = Aₙ sech(t/tₙ) exp(-i ωₙ t).
 
 Carrier frequency of the first soliton is passed as parameter `-f1`
-of the script and is equal to `1.0` by default. Soliton duration tₙ
-is fixed at 20 fs and the amplitude is calculated to fit the local
-dispersion coefficient in the fiber.
+of the script and is equal to `1.0` by default. Soliton durations t₁
+and t₂ are ad from parameters `-t1` and `-t2` respectively and are
+set to 20 fs by default. The amplitudes are calculated based on the
+durations and local dispersion coefficients in the fiber.
 
 The computational grid is defined as follows
 
@@ -26,9 +27,6 @@ conditions for 10 cm of the fiber with a step-size of 100 μm.
 While this is good enough if you interested purely in the dynamics,
 it is not fitting if you want to analyze the spatial _spectrum_ of
 the numerical solutions.
-
-For a fine-grained spatial grid integration please refer to
-`run_continue_solution_fsg.py`.
 """
 
 
@@ -58,6 +56,16 @@ parser.add_argument(
     type=float,
     default=1.000)
 parser.add_argument(
+    "-t1",
+    help="width of the first soliton in fs",
+    type=float,
+    default=20.000)
+parser.add_argument(
+    "-t2",
+    help="width of the first soliton in fs",
+    type=float,
+    default=20.000)
+parser.add_argument(
     "output",
     help="path to the output .npz file",
     type=str)
@@ -80,11 +88,11 @@ assert beta2(f2) < 0
 
 # Define the initial condition as a sum of two fundamental solitons of
 # equal width at the selected frequencies.
-t1 = 20
+t1 = args.t1
 a1 = fundamental_soliton_amplitude(f1, t1)
 u1 = a1 * sech(t/t1) * numpy.exp(-1j * f1 * t)
 
-t2 = 20
+t2 = args.t2
 a2 = fundamental_soliton_amplitude(f2, t2)
 u2 = a2 * sech(t/t2) * numpy.exp(-1j * f2 * t)
 
