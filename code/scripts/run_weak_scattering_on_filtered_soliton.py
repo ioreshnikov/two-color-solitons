@@ -27,7 +27,9 @@ from common.solver import gnlse
 from common.helpers import filter_tails, to_analytic
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(process)s %(asctime)s %(levelname)s %(message)s")
 
 
 parser = argparse.ArgumentParser(

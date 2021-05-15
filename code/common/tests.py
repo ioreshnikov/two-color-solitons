@@ -117,6 +117,65 @@ class SolitonTestCase(TestCase):
         # 3/beta3.
         self.assertLess(abs(fmax - 3/beta3) / fmax, 0.1)
 
+    def test_radiation_stays_suppressed_by_a_linear_absorber(self):
+        """
+        In here we test that Cherenkov radiation from a bright soliton
+        stays completely trapped by an absorbing boundary layer and
+        that the presence of the boundary layer does not affect
+        soliton behaviour.
+
+        The test itself is simple: we first launch the soliton without
+        the absorber and the with the absorber.
+        """
+
+        beta3 = 0.15
+
+        def sod(f):
+            return - 1/2 * f**2 + 1/6 * beta3 * f**3
+
+        def gamma(f):
+            return 1
+
+        def kerr(t, x, u):
+            return abs(u)**2 * u
+
+        t = numpy.linspace(0, 10, 1000)
+        x = numpy.linspace(-20, +20, 1000)
+        u0 = 3 / numpy.cosh(3*x)
+
+        # Additional non-reflective absorbing layer near the
+        # boundaries of the computational domain
+        absorbing_profile = 50 * sech(x + 18) + 50 * sech(x - 18)
+
+        def absorption(t, x, u):
+            return 1j * absorbing_profile * u
+
+        result_without_absorber = gnlse(t, x, u0, sod, gamma, kerr)
+        result_with_absorber = gnlse(t, x, u0, sod, gamma, kerr, absorption)
+        self.assertTrue(result_without_absorber.successful)
+        self.assertTrue(result_with_absorber.successful)
+
+        uwa = result_without_absorber.u[-1, :]
+        uw = result_with_absorber.u[-1, :]
+
+        inner = abs(x) < 10  # inside and relatively far away from the boundary layer
+        outer = abs(x) > 18  # outside the boundary layer
+
+        # The difference in the inner region should be relatively
+        # small: it's mostly the wrap-around Cherenkov radiation.
+        # Let's say that that difference should be less than 5% of the
+        # soliton peak.
+        self.assertLess(
+            abs(uw[inner] - uwa[inner]).max(),
+            0.05 * abs(uw[inner]).max())
+
+        # The outer region in the case with absorbing layer should
+        # contain approximately nothing. We define nothing as less
+        # than 0.1% of the original Cherenkov radiation.
+        self.assertLess(
+            abs(uw[outer]).max(),
+            1E-3 * abs(uwa[outer]).max())
+
 
 class HelpersTestCase(TestCase):
     """

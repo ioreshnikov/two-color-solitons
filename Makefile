@@ -37,13 +37,13 @@ endef
 # This macros plots the propagation results for the seed soliton
 define make-seed-plotting-target
 $(addsuffix _seed.$(ext), $1): $(addsuffix _seed.npz, $1)
-	python code/scripts/fig_time_outspectrum.py npz/$(strip $1)_seed.npz fig/$(strip $1)_seed.$(ext)
+	python code/scripts/plot_timedomain_outspectrum.py npz/$(strip $1)_seed.npz fig/$(strip $1)_seed.$(ext)
 endef
 
 # This macros plots the propagation results for the seed soliton
 define make-filt-plotting-target
 $(addsuffix _filt.$(ext), $1): $(addsuffix _filt.npz, $1)
-	python code/scripts/fig_time_outspectrum.py --vmin 1E-8 npz/$(strip $1)_filt.npz fig/$(strip $1)_filt.$(ext)
+	python code/scripts/plot_timedomain_outspectrum.py --vmin 1E-8 npz/$(strip $1)_filt.npz fig/$(strip $1)_filt.$(ext)
 endef
 
 $(foreach freq, $(SEED_FREQS), $(eval $(call make-seed-computation-target, $(freq))))
@@ -72,10 +72,10 @@ filt_$(ext): $(addsuffix _filt.$(ext), $(SEED_FREQS))
 	python code/scripts/run_filtered_soliton_propagation.py npz/1.085_ue_seed.npz npz/1.085_ue_filt.npz
 
 1.085_ue_seed.$(ext): 1.085_ue_seed.npz
-	python code/scripts/fig_time_outspectrum.py npz/1.085_ue_seed.npz fig/1.085_ue_seed.$(ext)
+	python code/scripts/plot_timedomain_outspectrum.py npz/1.085_ue_seed.npz fig/1.085_ue_seed.$(ext)
 
 1.085_ue_filt.$(ext): 1.085_ue_filt.npz
-	python code/scripts/fig_time_outspectrum.py --vmin 1E-8 npz/1.085_ue_filt.npz fig/1.085_ue_filt.$(ext)
+	python code/scripts/plot_timedomain_outspectrum.py --vmin 1E-8 npz/1.085_ue_filt.npz fig/1.085_ue_filt.$(ext)
 
 # Weak dispersive waves scattering
 # --------------------------------
@@ -92,7 +92,7 @@ endef
 # This macros defines a plotting target for the previous scattering problem
 define make-weak-scattering-plotting-target
 $(addprefix $(addsuffix _, $1), $(addsuffix .$(ext), $2)): $(addprefix $(addsuffix _, $1), $(addsuffix .npz, $2))
-	python code/scripts/fig_time_outspectrum.py npz/$(strip $1)_$(strip $2).npz fig/$(strip $1)_$(strip $2).$(ext)
+	python code/scripts/plot_timedomain_outspectrum.py npz/$(strip $1)_$(strip $2).npz fig/$(strip $1)_$(strip $2).$(ext)
 endef
 
 $(foreach freq, $(INCIDENT_FREQS_1), $(eval $(call make-weak-scattering-computation-target, 1.005, $(freq))))
@@ -132,28 +132,78 @@ scattering_1.150_$(ext): $(addprefix 1.150_, $(addsuffix .$(ext), $(INCIDENT_FRE
 scattering_1.085_ue_$(ext): $(addprefix 1.085_ue_, $(addsuffix .$(ext), $(INCIDENT_FREQS_2)))
 
 
-# Figures and computational targets for the paper
-# ===============================================
+# Special computational targets
+# =============================
 
-# These target defines a really nice scattering processes that is not
+# This target defines a really nice scattering processes that is not
 # covered by the brute force approach.
 1.070_1.650.npz: 1.070_seed.npz
 	python code/scripts/run_weak_scattering_on_filtered_soliton.py -fi 1.650 npz/1.070_seed.npz npz/1.070_1.650.npz
 
+# Long-distance propagation of seed solitons
+# ------------------------------------------
+
+# XXX: It takes literally days to run the long-distance simulations.
+
+1.010_seed_ld.npz:
+	python code/scripts/run_seed_soliton_propagation_ld.py -f1 1.010 npz/1.010_seed_ld.npz
+# ^^^ this simulation is an example where we cannot suppress one of
+# the radiation bands an it leaks through the absorbing layer and then
+# saturates the entire time domain in about 5 cm of simulation
+# distance. It's a catastrophe, don't waste your time on this one :)
+
+1.010_seed_ld.png: 1.010_seed_ld.npz
+	python code/scripts/plot_timedomain_outspectrum.py --no-rescon npz/1.010_seed_ld.npz fig/1.010_seed_ld.png
+
+1.070_seed_ld.npz:
+	python code/scripts/run_seed_soliton_propagation_ld.py -f1 1.070 npz/1.070_seed_ld.npz
+
+1.070_seed_ld.png: 1.070_seed_ld.npz
+	python code/scripts/plot_timedomain_outspectrum.py --no-rescon npz/1.070_seed_ld.npz fig/1.070_seed_ld.png
+
+1.085_ue_seed_ld.npz:
+	python code/scripts/run_seed_soliton_propagation_ld.py -f1 1.085 -t1 30.000 -t2 10.000 npz/1.085_ue_seed_ld.npz
+
+1.085_ue_seed_ld.png: 1.085_ue_seed_ld.npz
+	python code/scripts/plot_timedomain_outspectrum.py --no-rescon npz/1.085_ue_seed_ld.npz fig/1.085_ue_seed_ld.png
+
+.PHONY: seed_ld_npz
+seed_ld_npz: 1.010_seed_ld.npz 1.070_seed_ld.npz 1.085_ue_seed_ld.npz
+
+# Long-distance propagation of filtered solitons
+# ----------------------------------------------
+
+1.010_filt_ld.npz:
+	python code/scripts/run_filtered_soliton_propagation_ld.py npz/1.010_seed.npz npz/1.010_filt_ld.npz
+# ^^^ the same problem as the unfiltered case.
+
+1.070_filt_ld.npz:
+	python code/scripts/run_filtered_soliton_propagation_ld.py npz/1.070_seed.npz npz/1.070_filt_ld.npz
+
+1.085_ue_filt_ld.npz:
+	python code/scripts/run_filtered_soliton_propagation_ld.py npz/1.085_ue_seed.npz npz/1.085_ue_filt_ld.npz
+
+.PHONY: filt_ld_npz
+filt_ld_npz: 1.010_filt_ld.npz 1.070_filt_ld.npz 1.085_ue_filt_ld.npz
+
+
+# Figures for the paper
+# ===============================================
+
 Fig1.$(ext): 1.010_seed.npz
-	python code/scripts/fig_time_outspectrum.py --no-rescon npz/1.010_seed.npz fig/Fig1.$(ext)
+	python code/scripts/plot_timedomain_outspectrum.py --no-rescon npz/1.010_seed.npz fig/Fig1.$(ext)
 
 Fig2.$(ext): 1.010_filt.npz
-	python code/scripts/fig_time_outspectrum.py --vmin 1E-8 npz/1.010_filt.npz fig/Fig2.$(ext)
+	python code/scripts/plot_timedomain_outspectrum.py --vmin 1E-8 npz/1.010_filt.npz fig/Fig2.$(ext)
 
 Fig3.$(ext): 1.070_1.650.npz
-	python code/scripts/fig_time_outspectrum.py --vmin 1E-7 npz/1.070_1.650.npz fig/Fig3.$(ext)
+	python code/scripts/plot_timedomain_outspectrum.py --vmin 1E-7 npz/1.070_1.650.npz fig/Fig3.$(ext)
 
 Fig4.$(ext): 1.150_1.500.npz
-	python code/scripts/fig_time_outspectrum.py --vmin 1E-7 npz/1.150_1.500.npz fig/Fig4.$(ext)
+	python code/scripts/plot_timedomain_outspectrum.py --vmin 1E-7 npz/1.150_1.500.npz fig/Fig4.$(ext)
 
 Fig5.$(ext): 1.085_ue_3.500.npz
-	python code/scripts/fig_time_outspectrum.py --vmin 1E-7 npz/1.085_ue_3.500.npz fig/Fig5.$(ext)
+	python code/scripts/plot_timedomain_outspectrum.py --vmin 1E-7 npz/1.085_ue_3.500.npz fig/Fig5.$(ext)
 
 .PHONY: fig
 fig: Fig1.$(ext) Fig2.$(ext) Fig3.$(ext) Fig4.$(ext) Fig5.$(ext)

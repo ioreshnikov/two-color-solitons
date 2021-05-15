@@ -4,13 +4,11 @@
 __doc__ = """
 This script takes an output of `run_seed_soliton_propagation`, filters
 the radiation tails from the soliton, shifts the center back to zero
-and then integrates it further for another 10 cm with the same step of
-10 μm.
+and then integrates it further for another 100 cm with the step of 1 mm.
 
-This script is here mostly so that we can check if the stationary
-state produced by the seed soliton is stationary enough. It is also
-very useful to be used as a template for scattering simulations, since
-one can reuse the filtering and shifting code as is.
+The grid is the long-distance grid (the same as in
+`run_seed_soliton_propagation_ld) and an additional absorbing boundary
+layer is used to suppress the run-away radiation.
 """
 
 
@@ -20,6 +18,7 @@ import logging
 import numpy
 
 from common.fiber import beta, beta1, gamma, kerr_op
+from common.helpers import sech
 from common.solver import gnlse
 
 
@@ -58,9 +57,9 @@ f1 = npz["f1"]
 f2 = npz["f2"]
 
 
-# We run the simulation for 10 cm more. Should be enough to really see
-# the structure of the radiation in a clean setting.
-z = numpy.linspace(0, 1E5, int(1E3))
+# We run the simulation for 100 cm more, so we can see the long-term
+# dynamics of the pulse.
+z = numpy.linspace(0, 1E6, int(1E3))
 
 
 # We construct a super-Gaussian window around the soliton peak.
@@ -96,11 +95,22 @@ def filtered_gamma(f):
     return g
 
 
+# Additional non-reflective absorbing layer at the boundaries of the
+# computational domain. Layer amplitude is chosen experimentally.
+absorbing_profile = 1E-3 * (
+    sech((t - t.min()) / 500) +
+    sech((t - t.max()) / 500))
+
+
+def absorption(z, t, u):
+    return 1j * absorbing_profile * u
+
+
 # Integrate the initial condition.
 result = gnlse(
     z, t, u0,
     filtered_beta, filtered_gamma,
-    kerr_op, dt=10)
+    kerr_op, absorption, dt=10)
 
 if not result.successful:
     logging.error(
