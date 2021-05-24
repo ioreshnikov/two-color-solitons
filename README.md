@@ -14,18 +14,31 @@ The second directory, `text`, contains TeX source of the paper and the figures.
 
 The code is written in `python`, version `3.5` is the oldest one that we have tried. To execute the project `Makefile` you need `make` installed on your machine.
 
+# Installation
+
+We strongly advise you run an installation in a virtual environment. You can do this by running
+
+    $ python -m venv venv
+
+from the root of the project. To activate the environment you execute
+
+    $ . venv/bin/activate
+
+Then from inside the environment you can install the package by running
+
+    $ python -m pip install -e .
+
 ## Reproducing the results
 
-We have tried to make the result reproduction as straightforward as possible. All the actions necessary to build the paper from scratch — including the environment setup — are defined in the makefile at the root of the project. The makefile defines the following targets:
+We have tried to make the result reproduction as straightforward as possible. All the actions necessary to build the paper from scratch are defined in the makefile at the root of the project. To run all the simulations and compile the draft of the paper you activate the environment from the root of the project
 
-1. `npz` — runs all the simulations and produces the raw data files. The simulations themselves take from 30 minutes to 3 hours to run on your average machine and running them sequentially might take _days_. However, if you have a machine powerful enough (with memory size being the most valuable resource), you can run it in parallel with `make -j8 npz` and bring the computation time down to several hours.
-2. `fig` — compiles all the plots used in the paper.
-3. `pdf` — compiles the pdf file of the paper.
-4. `zip` — packages the TeX source and the figures in a zip archive suitable for a journal submission.
+    $ . venv/bin/activate
 
-As always, you can run all the targets by executing
+and then run
 
-    make all
+    $ make draft
+
+This will product the draft of the paper and put it inside `text` directory.
 
 ## Acknowledgment
 

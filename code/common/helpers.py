@@ -1,4 +1,5 @@
 from scipy import fft
+from scipy import signal
 import numpy
 
 
@@ -123,3 +124,44 @@ def filter_tails(x, y, w=100):
     x0 = x[idx_max]
     window = numpy.exp(- ((x - x0)/w)**8)
     return window * y
+
+
+def peaks_close_to(x, y, x0s):
+    """
+    Find peaks in a vicinity of given points.
+
+    Parameters
+    ----------
+    x : array_like
+        coordinate grid
+    y : array_like
+        the function
+    x0 : array_like
+        points of interest
+
+    Note
+    ----
+    Algorithm parameters (vicinity size, prominence thresholds) work
+    for the figures we use in the paper, but otherwise they're not
+    tested. It is in no way generic.
+    """
+
+    result = []
+
+    for x0 in x0s:
+        win = abs(x - x0) < 0.05
+
+        xw = x[win]
+        yw = y[win]
+
+        peaks, props = signal.find_peaks(
+            yw / yw.max(),
+            prominence=(0.5, None))
+
+        if not len(peaks):
+            continue
+
+        idx, *_ = peaks
+        result.append((xw[idx], yw[idx]))
+
+    return result
