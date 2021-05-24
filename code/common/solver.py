@@ -1,6 +1,11 @@
+from datetime import timedelta
 import logging
+import signal
+import os
+import tempfile
 import time
 
+from humanize import precisedelta
 from scipy import fft
 from scipy import integrate
 import numpy
@@ -16,23 +21,19 @@ def _report_progress(n, nt, timer_start):
     timer_elapsed = timer_current - timer_start
     timer_left = timer_elapsed * (1 - progress) / progress
 
-    minutes_elapsed = int(timer_elapsed / 60)
-    seconds_elapsed = int(timer_elapsed % 60)
-
-    minutes_left = int(timer_left / 60)
-    seconds_left = int(timer_left % 60)
-
-    def format_minutes_seconds(minutes, seconds):
-        if minutes > 0:
-            return "%d minutes %02d seconds" % (minutes, seconds)
-        else:
-            return "%02d seconds" % seconds
+    # Format timers to human-readable strings (hence 'hr_').
+    hr_elapsed = precisedelta(
+        timedelta(seconds=timer_elapsed),
+        minimum_unit="seconds",
+        format="%02d")
+    hr_left = precisedelta(
+        timedelta(seconds=timer_left),
+        minimum_unit="seconds",
+        format="%02d")
 
     logging.info(
         "  %5.2f%%  %s elapsed  %s left",
-        100 * progress,
-        format_minutes_seconds(minutes_elapsed, seconds_elapsed),
-        format_minutes_seconds(minutes_left, seconds_left))
+        100 * progress, hr_elapsed, hr_left)
 
 
 class IntegrationResult:
@@ -68,7 +69,7 @@ class IntegrationResult:
     def __init__(self, t, x, k, u, v, error_code=None):
         self.t = t
         self.x = x
-        self.k = k
+        self.k = fft.fftshift(k)
         self.u = u
         self.v = v
         self.error_code = error_code
@@ -82,7 +83,7 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
     """
     Integrate a GNLSE using the integrating factor method.
 
-    This function integrates a generalized version of nonlinear Schödinger
+    This function integrates a generalized version of nonlinear Schrödinger
     equation
 
         ∂ₜ ũ = i β(k) ũ(t, k)
@@ -100,7 +101,7 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
     The integration is performed using the integrating factor method as
     described by J.M. Dudley & J.R. Taylor in Chapter 3 of Supercontinuum
     Generation in Optical Fibers, CUP 2010. Instead of integrating the
-    original equation we restort to integrating a modified version
+    original equation we resort to integrating a modified version
 
         ∂ₜ v = i γ(k) F{ N(t, x, u(t, x)) }
              + i F{ L(t, x, u(t, x)) },
@@ -187,6 +188,23 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
     timer_start = time.time()
     logging.info("Integrating:")
 
+    # XXX: This is a nice debug feature to have -- in a long-running
+    # simulation we sometimes want to see the intermediate integration
+    # results. We add this with a help of signals: when we receive a
+    # SIGUSR1 or SIGUSR2 we dump the intermediate integration result
+    # on disk in a temporary directory.
+    def dump_intermediate_data(sig, frame):
+        logging.debug(
+            "Caught SIGUSR*. Dumping intermediate data on disk...")
+        fd = os.path.join(
+            tempfile.gettempdir(),
+            "{}.npz".format(os.getpid()))
+        numpy.savez(fd, t=t, x=x, u=u, v=v)
+        logging.debug("\twritten to {}".format(fd))
+
+    signal.signal(signal.SIGUSR1, dump_intermediate_data)
+    signal.signal(signal.SIGUSR2, dump_intermediate_data)
+
     for n in range(1, nt):
         _report_progress(n, nt, timer_start)
 
@@ -217,7 +235,7 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
             v_ = ode.integrate(t_)
             if not ode.successful():
                 return IntegrationResult(
-                    u, v, error_code=ode.get_return_code())
+                    t, x, k, u, v, error_code=ode.get_return_code())
 
         # Calculate the proper spectrum and then save the spectrum and
         # the coordinate representation into the output matrices.
@@ -226,6 +244,4 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
         v[n, :] = fft.fftshift(exp * v_)
 
     logging.info("Done!")
-
-    k = fft.fftshift(k)
     return IntegrationResult(t, x, k, u, v)

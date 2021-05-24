@@ -1,6 +1,7 @@
 import matplotlib
 from matplotlib import pyplot as plot
 
+
 COLOR_BLUE1 = "#0072b2"
 COLOR_GREEN = "#009e73"
 COLOR_VIOLET = "#9400d3"

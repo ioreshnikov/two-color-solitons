@@ -12,11 +12,11 @@ from matplotlib.legend_handler import HandlerBase
 from numpy import fft
 import numpy
 
-from common.fiber import (
-    beta, beta1, gamma,
+from common.fiber import beta, beta1, gamma
+from common.helpers import (
     estimate_soliton_parameters,
-    fundamental_soliton_dispersive_relation)
-from common.helpers import peaks_close_to, zeros_on_a_grid
+    fundamental_soliton_dispersive_relation,
+    peaks_close_to, zeros_on_a_grid)
 from common.plotter import XSMALL_FONT_SIZE, pr_setup, pr_publish
 
 

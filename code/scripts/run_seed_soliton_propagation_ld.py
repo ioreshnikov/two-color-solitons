@@ -17,16 +17,17 @@ and t₂ are ad from parameters `-t1` and `-t2` respectively and are
 set to 20 fs by default. The amplitudes are calculated based on the
 durations and local dispersion coefficients in the fiber.
 
-The computational grid is defined as follows
+The major difference between this script and `run_seed_soliton_propagation.py`
+is the computational grid, which in our case is defined as follows
 
     t ∈ [-8000, 8000), 2¹⁶ equidistant points
-    z ∈ [0, 10000], 1000 equidistant points
+    z ∈ [0, 1000000], 1000 equidistant points
 
-In physical units, that corresponds to propagating the initial
-conditions for 10 cm of the fiber with a step-size of 100 μm.
-While this is good enough if you interested purely in the dynamics,
-it is not fitting if you want to analyze the spatial _spectrum_ of
-the numerical solutions.
+and an additional absorbing boundary layer near the edges of the
+computational domain. The absorbing layer is added so we can
+simulate long-distance pulse propagation. Indeed, in this specific
+case, we propagate the initial pulse for 100 cm of the fiber with
+a step-size of 1 mm.
 """
 
 
@@ -39,9 +40,9 @@ from common.fiber import (
     beta, beta1, beta2,
     gamma, kerr_op)
 from common.helpers import (
-    sech, to_analytic,
     gv_matching_frequencies,
     fundamental_soliton_amplitude)
+from common.helpers import sech, to_analytic
 from common.solver import gnlse
 
 
@@ -76,7 +77,7 @@ args = parser.parse_args()
 
 
 # Define the computational grid.
-z = numpy.linspace(0, 1E5, int(1E3))
+z = numpy.linspace(0, 1E6, int(1E3))
 t = numpy.linspace(-8000, +8000, 2**16)
 
 # Pick the carrier frequency of the first pulse at then find a
@@ -117,11 +118,22 @@ def filtered_gamma(f):
     return g
 
 
+# Additional non-reflective absorbing layer at the boundaries of the
+# computational domain. Layer amplitude is chosen experimentally.
+absorbing_profile = 1E-3 * (
+    sech((t - t.min()) / 500) +
+    sech((t - t.max()) / 500))
+
+
+def absorption(z, t, u):
+    return 1j * absorbing_profile * u
+
+
 # Integrate the initial condition.
 result = gnlse(
     z, t, u0,
     filtered_beta, filtered_gamma,
-    kerr_op, dt=10)
+    kerr_op, absorption, dt=10)
 
 if not result.successful:
     logging.error(
