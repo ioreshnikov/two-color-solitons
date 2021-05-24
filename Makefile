@@ -7,13 +7,14 @@ vpath %.npz npz
 vpath %.$(ext) fig
 
 
+# The computational targets in the sections below are left from the
+# period of active research. They do computations and exploratory
+# plotting on a large family of parameters, but almost none of it
+# makes it to the final paper. We leave them here for posterity.
+
+
 # Brute-force computational targets
 # =================================
-
-# The targets in these section are left from the period of active
-# research. They do computations and exploratory plotting on a large
-# family of parameters, but almost none of it makes it to the final
-# paper. We leave them here for posterity.
 
 # Seed propagation, filtered solutions and Cherenkov radiation
 # ------------------------------------------------------------
