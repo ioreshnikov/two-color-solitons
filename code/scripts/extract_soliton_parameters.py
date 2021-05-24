@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
 
 
-from argparse import ArgumentParser
+__doc__ = """
+This script extracts parameters of individual soliton components from the
+integration result produced by `run_...` scripts. The parameters are
+estimated by approximating the simulated spectrum as a sum of two
+hyperbolic secants. For performance reason, in this script we do not
+require the group velocities of the individual components to be equal.
+"""
+
+
+import argparse
 
 from matplotlib import pyplot as plot
 from numpy import fft
@@ -9,11 +18,12 @@ import numpy
 
 from common.helpers import (
     _envelope_ansatz,
-    estimate_soliton_parameters,
-    fundamental_soliton_dispersive_relation)
+    estimate_soliton_parameters)
 
 
-parser = ArgumentParser()
+parser = argparse.ArgumentParser(
+    description=__doc__,
+    formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument(
     "-i", "--interactive",
     help="Plot estimated spectrum as we go",

@@ -371,7 +371,8 @@ def estimate_soliton_parameters(x, y, a1, a2, t1, t2, f1, f2, w=100, match_f=Tru
         every_parameter_loss, (a1, a2, t1, t2, f1, f2))
     a1, a2, t1, t2, f1, f2 = result.x
 
-    return a1, a2, t1, t2, f1, f2
+    if not match_f:
+        return a1, a2, t1, t2, f1, f2
 
     result = minimize(
         frequency_loss, (f1, ), args=(a1, a2, f1, f2))
