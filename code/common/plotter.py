@@ -1,5 +1,8 @@
 import matplotlib
+from matplotlib import colors
 from matplotlib import pyplot as plot
+import numpy
+from numpy import fft
 
 
 COLOR_BLUE1 = "#0072b2"
@@ -83,3 +86,88 @@ def pr_publish(filename, dpi=None):
     plot.tight_layout(pad=0.5)
     plot.gca().tick_params(which="both", direction="out")
     plot.savefig(filename, dpi=dpi)
+
+
+def gpc_setup(z, t, vmin=1E-6, title=None):
+    """
+    Setup gridpoint callback to be passed to the solver.
+
+    This function creates an interactive plotter window and returns a
+    callback that updates the time- and frequency domain subplots in
+    there interactively as we get new data from the solver.
+
+    Returns
+    -------
+    gpc : callable with the signature of gpc(z, t, f, u, v)
+        the plot updating function. This can be passed directly to
+        the solver.
+    """
+
+    # Calculate the frequency grid. Usually not computed by the caller
+    # at this point, but will come from the solver.
+    nz = len(z)
+    nt = len(t)
+    dt = t[1] - t[0]
+
+    f = 2 * numpy.pi * fft.fftshift(fft.fftfreq(nt, dt))
+
+    # The images we get are excessively large. We are going to
+    # sub-sample everything for faster rendering.
+    sst = int(nt / 1024)
+    nt = int(nt / sst)
+
+    # Prepare the stand-in for the future data matrices
+    _ = numpy.empty((nz, nt))
+    _[:] = numpy.nan
+
+    plot.figure(figsize=(8, 8))
+    if title:
+        plot.suptitle(title)
+
+    # Scale the axis to the approriate units
+    z = z / 1E4
+    t = t / 1E3
+
+    # Prepare the panels with the stand-in matrix
+    plot.subplot(2, 1, 1)
+    mesh1 = plot.pcolormesh(
+        z, t[::sst], _.T,
+        cmap="jet",
+        norm=colors.LogNorm(vmin=vmin, vmax=1))
+    plot.xlabel(r"Distance $z$, cm")
+    plot.ylabel(r"Delay $t$, ps")
+
+    plot.subplot(2, 1, 2)
+    mesh2 = plot.pcolormesh(
+        z, f[::sst], _.T,
+        cmap="jet",
+        norm=colors.LogNorm(vmin=vmin, vmax=1))
+    plot.ylim(0.0, 4.0)
+    plot.xlabel(r"Distance $z$, cm")
+    plot.ylabel(r"Frequency $\omega$, rad/fs")
+
+    plot.ion()
+    plot.show(block=False)
+    plot.pause(1E-3)
+
+    # Construct the callback and return it
+    def gpc(z, t, f, u, v):
+        u = u[:, ::sst]
+        v = v[:, ::sst]
+
+        # Scale to [0, 1] interval
+        u = abs(u) / abs(u).max()
+        v = abs(v) / abs(v).max()
+
+        # Rotate it appropriately and then switch to instantaneous
+        # intensity
+        u = u.T**2
+        v = v.T**2
+
+        mesh1.set_array(u[:-1, :-1].ravel())
+        mesh2.set_array(v[:-1, :-1].ravel())
+        #                 ^^^ yes, super weird :)
+
+        plot.pause(1E-3)
+
+    return gpc

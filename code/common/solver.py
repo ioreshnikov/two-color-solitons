@@ -1,8 +1,5 @@
 from datetime import timedelta
 import logging
-import signal
-import os
-import tempfile
 import time
 
 from humanize import precisedelta
@@ -79,7 +76,7 @@ class IntegrationResult:
         return self.error_code is None
 
 
-def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
+def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None, gpc=None):
     """
     Integrate a GNLSE using the integrating factor method.
 
@@ -132,6 +129,9 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
         time-domain part of the nonlinear operator
     lin : callable with the signature of lin(t, x, u)
         time-domain linear operator
+    gpc : callable with the signature of gcp(t, x, f, u, v)
+        an optional callback executed after computing up to the next
+        grid point
 
     Returns
     -------
@@ -188,23 +188,6 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
     timer_start = time.time()
     logging.info("Integrating:")
 
-    # XXX: This is a nice debug feature to have -- in a long-running
-    # simulation we sometimes want to see the intermediate integration
-    # results. We add this with a help of signals: when we receive a
-    # SIGUSR1 or SIGUSR2 we dump the intermediate integration result
-    # on disk in a temporary directory.
-    def dump_intermediate_data(sig, frame):
-        logging.debug(
-            "Caught SIGUSR*. Dumping intermediate data on disk...")
-        fd = os.path.join(
-            tempfile.gettempdir(),
-            "{}.npz".format(os.getpid()))
-        numpy.savez(fd, t=t, x=x, u=u, v=v)
-        logging.debug("\twritten to {}".format(fd))
-
-    signal.signal(signal.SIGUSR1, dump_intermediate_data)
-    signal.signal(signal.SIGUSR2, dump_intermediate_data)
-
     for n in range(1, nt):
         _report_progress(n, nt, timer_start)
 
@@ -242,6 +225,9 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None):
         exp = numpy.exp(1j * D * (t_ - t[0]))
         u[n, :] = fft.fft(exp * v_)
         v[n, :] = fft.fftshift(exp * v_)
+
+        if gpc:
+            gpc(t, x, k, u, v)
 
     logging.info("Done!")
     return IntegrationResult(t, x, k, u, v)

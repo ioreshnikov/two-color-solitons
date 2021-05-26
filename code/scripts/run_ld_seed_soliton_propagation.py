@@ -41,13 +41,14 @@ from common.fiber import (
     gamma, kerr_op)
 from common.helpers import (
     gv_matching_frequencies,
-    fundamental_soliton_amplitude)
-from common.helpers import sech, to_analytic
+    fundamental_soliton_amplitude,
+    sech, to_analytic)
+from common.plotter import gpc_setup
 from common.solver import gnlse
 
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(process)s %(asctime)s %(levelname)s %(message)s")
 
 
@@ -107,33 +108,52 @@ u0 = to_analytic((u1 + u2).real)
 # dispersive profile.
 def filtered_beta(f):
     b = beta(f) - beta(f1) - beta1(f1) * (f - f1)
-    b[(f <= 0) | (f >= 0.75 * f.max())] = 0
+    b[(f <= 0.5) | (f >= 0.75 * f.max())] = 0
     return b
 
 
 # Frequency filter the nonlinear coefficient.
 def filtered_gamma(f):
     g = gamma(f)
-    g[(f <= 0) | (f >= 0.75 * f.max())] = 0
+    g[(f <= 0.5) | (f >= 0.75 * f.max())] = 0
     return g
 
 
-# Additional non-reflective absorbing layer at the boundaries of the
-# computational domain. Layer amplitude is chosen experimentally.
-absorbing_profile = 1E-3 * (
-    sech((t - t.min()) / 500) +
-    sech((t - t.max()) / 500))
+# XXX: Please notice, that in the filtered expressions above we
+# supress not only the very high frequencies, but also the the
+# frequencie below ω = 0.5. Potentially this might be wrong, but in
+# multiple simulations before we've seen a sharp numeric instability
+# developing in the region around 0 < ω < 0.5 around the time when
+# dispersive radiation hits an absorbing boundary layer. This is a
+# quick and dirty way to suppress this parasitic side-band. The nature
+# of this instability is not yet clear and we might be losing some
+# important physics in here, but again this is restricted only to the
+# long-distance seed simulations with the absorber.
 
 
+# Dynamic absorbing profile: put absorption maximum as far away from
+# the soliton as possible.
 def absorption(z, t, u):
+    t0 = t[abs(u).argmax()]
+    tmin = t0 + t.min()
+    tmax = t0 + t.max()
+
+    absorbing_profile = 1E-3 * (
+        sech((t - tmin) / 500) +
+        sech((t - tmax) / 500))
+
     return 1j * absorbing_profile * u
+
+
+# Setup interactive plotting
+gpc = gpc_setup(z, t, title=r"$\omega_{{1}} = {:.3f}$".format(f1))
 
 
 # Integrate the initial condition.
 result = gnlse(
     z, t, u0,
     filtered_beta, filtered_gamma,
-    kerr_op, absorption, dt=10)
+    kerr_op, lin=absorption, dt=10, gpc=gpc)
 
 if not result.successful:
     logging.error(
