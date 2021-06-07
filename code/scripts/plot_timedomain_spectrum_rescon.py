@@ -23,6 +23,7 @@ import numpy
 from common.fiber import beta, beta1, gamma
 from common.helpers import (
     estimate_soliton_parameters,
+    frame_of_reference,
     fundamental_soliton_dispersive_relation,
     peaks_close_to, zeros_on_a_grid)
 from common.plotter import XSMALL_FONT_SIZE, pr_setup, pr_publish
@@ -109,7 +110,7 @@ z = z / 10000
 
 # Frame of reference for resonance condition plotting and dispersive
 # relations for the solitons and the medium.
-frame = beta(f1) + beta1(f1) * (f - f1)
+frame = frame_of_reference(f, f1)
 
 k1 = fundamental_soliton_dispersive_relation(f1, t1, f) - frame + gamma(f1) * a2**2
 k2 = fundamental_soliton_dispersive_relation(f2, t2, f) - frame + gamma(f2) * a1**2
@@ -139,7 +140,7 @@ if not fi:
 else:
     # If it's a scattering problem, then we are interested only in the
     # scattering resonances.
-    framei = beta(f1) + beta1(f1) * (fi - f1)
+    framei = frame_of_reference(fi, f1)
     bi = beta(fi) - framei
 
     # 1. Resonance due to β(ωₛ) = β(ωᵢ) (but exclude ωᵢ)

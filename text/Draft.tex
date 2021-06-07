@@ -97,19 +97,19 @@ Here and further tilde indicates a Fourier image of the field and $\mathcal{F}\l
 For the solitary waves $U_{1, 2}(z, t)$ we assume that they satisfy a pair of coupled nonlinear Schr\"odinger equations below
 \begin{equation}
   \label{eq:CoupledSolitons}
-  i \partial_{z} \tilde U_{n}
-    + \beta_{n}(\omega) \tilde U_{n}(z, \omega)
-    + \gamma(\omega) \mathcal{F} \left\{
+  i \partial_{z} U_{n}
+    + \beta_{n}(i \partial_{t}) U_{n}(z, t)
+    + \gamma(\omega_{n}) \left(
       \abs{U_{n}}^{2} U_{n} + 2 \abs{U_{m}}^{2} U_{n}
-    \right\}_{(\omega > 0)} = 0,
+    \right) = 0,
 \end{equation}
-where $n = 1, 2$ and $m = 2, 1 \ne n$. Essentially, this is an assumption that the solitons are coupled strictly by inducing a refractive-index potential on each other, and each soliton exists in some sort of a truncated dispersion landscape that is defined by the operator $\beta_{n}(\omega)$. A reasonable guess for a truncated operator is a parabolic approximation close to the carrier frequency
+where $n = 1, 2$ and $m = 2, 1 \ne n$. Essentially, this is an assumption that the solitons are coupled strictly by inducing a refractive-index potential on each other, and each soliton exists in some sort of a truncated dispersion landscape that is defined by the operator $\beta_{n}(i \partial_{t})$. A reasonable guess for a truncated operator is a parabolic approximation close to the carrier frequency
 \begin{equation}
   \label{eq:TruncatedDispersionOperator}
-  \beta_{n}(\omega) =
+  \beta_{n}(i \partial_{t}) =
     \beta(\omega_{n}) +
-    \beta'(\omega_{n}) (\omega - \omega_{n}) +
-    \frac{1}{2} \, \beta''(\omega_{n}) (\omega - \omega_{n})^{2}
+    i \beta'(\omega_{n}) \partial_{t} -
+    \frac{1}{2} \, \beta''(\omega_{n}) \partial_{t}^{2}
 \end{equation}
 We additionally propose that in the frame of reference of the individual soliton the envelope evolves with wavenumber $k_{n}(\omega)$ which we approximate by the wavenumber of the fundamental soliton in the ordinary nonlinear Schr\"odinger equation and a correction from a secondary soliton as
 \begin{equation}
@@ -136,7 +136,7 @@ By substituting ansatz~\eqref{eq:PerturbationAnsatz} into equation~\eqref{eq:GNL
       U_{2}^{2} U_{1}^{*} + U_{1}^{2} U_{2}^{*}
     \right\}_{(\omega > 0)}
 \end{multline}
-In the right-hand's side of equation~\eqref{eq:PerturbationEquation} we see two types of driving terms and each of those terms can be in resonance with the linear dispersive waves that exist in the system, if the particular wavenumber $k(\omega_{*})$ of the driving term is equal to a wavenumber of a dispersive wave $\beta(\omega)$ at some frequency $\omega_{*}$~\cite{akhmediev1995cherenkov, yulin2004four}. The first type of the terms is $\left[ \beta(\omega) - \beta_{n}(\omega) \right] U_{n}(z, \omega)$ which drives the generation of Cherenkov radiation by an individual soliton $U_{n}$ if the following resonance condition is satisfied
+In the right-hand's side of equation~\eqref{eq:PerturbationEquation} we see two types of driving terms and each of those terms can be in resonance with the linear dispersive waves that exist in the system, if the particular wavenumber $k(\omega_{*})$ of the driving term is equal to a wavenumber of a dispersive wave $\beta(\omega_{*})$ at some frequency $\omega_{*}$~\cite{akhmediev1995cherenkov, yulin2004four}. The first type of the terms is $\left[ \beta(\omega) - \beta_{n}(\omega) \right] U_{n}(z, \omega)$ which drives the generation of Cherenkov radiation by an individual soliton $U_{n}$ if the following resonance condition is satisfied
 \begin{equation}
   \label{eq:CherenkovRadiationResonanceCondition}
   \beta(\omega) = k_{n}(\omega).
@@ -229,11 +229,11 @@ Once we suppress the initial radiation that is shed by the seed soliton during t
 
 \begin{figure}[t]
   \includegraphics{{Figures/Fig1}.pdf}
-  \caption{(color online) Cherenkov radiation of an isolated soliton produced by the simulation in Fig.~\ref{fig:Fig1}. (a) time-domain view (b) input and output spectra (c) resonance conditions diagram.}%
+  \caption{(color online) Cherenkov radiation of an isolated soliton produced by the soliton with $\omega_{1} = 1.010$~rad/fs. (a) time-domain view (b) input and output spectra (c) resonance conditions diagram.}%
   \label{fig:Fig1}
 \end{figure}
 
-To study the scattering processes we perform the seed simulation and isolate the soliton as we did before. To that we add an incident dispersive wave in the form of a Gaussian pulse
+To study the scattering processes we perform the seed simulation and isolate the soliton. To that we add an incident dispersive wave in the form of a Gaussian pulse
 \begin{equation*}
   \psi_{inc}(t) = A_{\text{inc}} \exp\left(
     - \frac{
@@ -250,7 +250,7 @@ The first configuration we consider is very close to the degenerate case where t
 
 \begin{figure}[t]
   \includegraphics{{Figures/Fig2}.pdf}
-  \caption{(color online) Scattering of a weak DW with carrier frequency $\omega_{\text{inc}} = 1.650$ on a soliton with first-component carrier frequency $\omega_{1} = 1.070$. (a) time-domain view (b) input and output spectra (c) resonance conditions diagram.}%
+  \caption{(color online) Scattering of a weak DW with carrier frequency $\omega_{\text{inc}} = 1.650$~rad/fs on a soliton with first-component carrier frequency $\omega_{1} = 1.070$~rad/fs. (a) time-domain view (b) input and output spectra (c) resonance conditions diagram.}%
   \label{fig:Fig2}
 \end{figure}
 
@@ -258,7 +258,7 @@ The second configuration (seen in Fig.~\ref{fig:Fig3}) is a case with significan
 
 \begin{figure}[t]
   \includegraphics{{Figures/Fig3}.pdf}
-  \caption{(color online) Scattering of a weak DW with carrier frequency $\omega_{\text{inc}} = 1.500$ on a soliton with first-component carrier frequency $\omega_{1} = 1.150$. (a) time-domain view (b) input and output spectra (c) resonance conditions diagram.}%
+  \caption{(color online) Scattering of a weak DW with carrier frequency $\omega_{\text{inc}} = 1.500$~rad/fs on a soliton with first-component carrier frequency $\omega_{1} = 1.150$~rad/fs. (a) time-domain view (b) input and output spectra (c) resonance conditions diagram.}%
   \label{fig:Fig3}
 \end{figure}
 
@@ -266,7 +266,7 @@ The third configuration (seen in Fig.~\ref{fig:Fig4}) is, in a sense, symmetric 
 
 \begin{figure}[t]
   \includegraphics{{Figures/Fig4}.pdf}
-  \caption{(color online) Scattering of a weak DW with carrier frequency $\omega_{\text{inc}} = 3.500$ on a soliton with first-component carrier frequency $\omega_{1} = 1.085$. (a) time-domain view (b) input and output spectra (c) resonance conditions diagram.}%
+  \caption{(color online) Scattering of a weak DW with carrier frequency $\omega_{\text{inc}} = 3.500$~rad/fs on a soliton with first-component carrier frequency $\omega_{1} = 1.085$~rad/fs. (a) time-domain view (b) input and output spectra (c) resonance conditions diagram.}%
   \label{fig:Fig4}
 \end{figure}
 
@@ -274,17 +274,17 @@ Overall, in all our experiments, we have only seen the scattered components corr
 
 \section{Nonlinear effects}
 
-When deriving the resonance conditions for scattering processes~\eqref{eq:Type0ResonanceCondition}~--~\eqref{eq:Type3ResonanceCondition} we assumed that the parameters of the solitons stay constant throughout propagation and scattering processes. This can be considered a reasonable approximation when the ampltiude of the incident wave stays negligible compared to the ampltidues of the individual soliton components. However, in the general case of a more intensive incident radiation this approximation breaks down. In this section we will briefly discuss two specific examples, where during scattering the interaction with the incident dispersive wave changes the parameters of the soliton. General setup of the experiments stay the same --- we consider scattering of a Gaussian pulse on an isolated two-color soliton --- but this time we pick DW ampltiude to be equal to 5\% of the soliton's maximum amplitude. This change might seem subtle, but this is enough to enrich the scattering dynamics.
+When deriving the resonance conditions for scattering processes~\eqref{eq:Type0ResonanceCondition}~--~\eqref{eq:Type3ResonanceCondition} we assumed that the parameters of the solitons stay constant throughout propagation and scattering processes. This can be considered a reasonable approximation when the ampltiude of the incident wave stays negligible compared to the ampltidues of the individual soliton components. However, in the general case of a more intensive incident radiation this approximation breaks down. In this section we will briefly discuss two specific examples, where during scattering the interaction with the incident dispersive wave changes the parameters of the soliton. General setup of the experiments stay the same --- we consider scattering of a Gaussian pulse on an isolated two-color soliton --- but this time we pick DW ampltiude to be equal to 5\% of the soliton's maximum amplitude. This change might seem subtle, but this is sufficient to make the scattering dynamics much richer.
 
-In the first example (displayed in Figure~\ref{fig:Fig6}) we consider scattering of a dispersive wave with the incident frequency $\omega_{i} = 2.100$ on a soliton with $\omega_{1} = 1.010$. We see that an intensive dispersive wave can pull the soliton during scattering. This effect has been demonstrated before for the classical bright solitons of nonlinear Schr\"odinger equation~\cite{demircan2011controlling, tartara2015soliton}. What is remarkable about this interaction in case of a two-color soliton is the fact that the soliton appears to be stable during this process. Granted, the frequency offset gained by the soliton during the scattering is not especially prominent (panel~\ref{fig:Fig6}b.2), but at the same time the amplitude difference in both the frequency components stays under 1\% (panel~\ref{fig:Fig5}b.1), so almost no power loss occurs.
+In the first example (displayed in Figure~\ref{fig:Fig5}) we consider scattering of a dispersive wave with the incident frequency $\omega_{i} = 2.100$~rad/fs on a soliton with $\omega_{1} = 1.010$~rad/fs. We see that an intensive dispersive wave can pull the soliton during scattering. This effect has been demonstrated before for the classical bright solitons of nonlinear Schr\"odinger equation~\cite{demircan2011controlling, tartara2015soliton}. What is remarkable about this interaction in case of a two-color soliton is the fact that the soliton appears to be stable during this process. Granted, the frequency offset gained by the soliton during the scattering is not especially prominent (panel~\ref{fig:Fig5}b.2), but at the same time the amplitude difference in both the frequency components stays under 1\% (panel~\ref{fig:Fig5}b.1), so almost no power loss occurs.
 
 \begin{figure}[t]
-  \includegraphics{{Figures/Fig6}.pdf}
-  \caption{(color online) Scattering of an intensive DW with carrier frequency $\omega_{\text{inc}} = 2.100$ on a soliton with first-component carrier frequency $\omega_{1} = 1.010$. (a) time-domain view (b.1, 2) soliton amplitude and central frequency oscillations (c) output spectrum.}
-  \label{fig:Fig6}
+  \includegraphics{{Figures/Fig5}.pdf}
+  \caption{(color online) Scattering of an intensive DW with carrier frequency $\omega_{\text{inc}} = 2.100$~rad/fs on a soliton with first-component carrier frequency $\omega_{1} = 1.010$~rad/fs. (a) time-domain view (b.1, 2) soliton amplitude and central frequency oscillations (c) output spectrum.}
+  \label{fig:Fig5}
 \end{figure}
 
-In the second example (displayed in Figure~\ref{fig:Fig5}) we consider scattering of a dispersive wave with the incident frequency $\omega_{i} = 1.100$ on a soliton with $\omega_{1} = 1.010$. As it is evident from panels~\ref{fig:Fig5}b.1 and~\ref{fig:Fig5}b.2 the incident radiation pumps internal oscillations in the soliton during the scattering. The interaction of oscillating nonlinear waves, both the radiation and the scattering processes, is a well studied problem~\cite{driben2015resonant,oreshnikov2015interaction,wright2015ultrabroadband,conforti2015parametric,oreshnikov2017dispersive} and the common trait in this setting, independent on the nature of the soliton oscillations, is that the dispersive radiation produced (generated or scattered) by the soliton is polychromatic, i.e.\ it consists of several isolated spectral components. This is indeed what we see in the output spectrum on panel~\ref{fig:Fig5}c. To explain this behavior let us return to equations~\eqref{eq:PerturbationEquation} and~\eqref{eq:ScatteredFieldEquation}. In the oscillating case the individual solitons $U_{1}$ and $U_{2}$ are no longer represented by a single spatial frequency $\propto e^{i k_{1} z}$ and $\propto e^{i k_{2} z}$, but instead each of them corresponds to a Fourier series
+In the second example (displayed in Figure~\ref{fig:Fig6}) we consider scattering of a dispersive wave with the incident frequency $\omega_{i} = 1.100$~rad/fs on a soliton with $\omega_{1} = 1.010$~rad/fs. As it is evident from panels~\ref{fig:Fig6}b.1 and~\ref{fig:Fig6}b.2 the incident radiation pumps internal modes of the bound state of the soliton during the scattering. The interaction of oscillating nonlinear waves, both the radiation and the scattering processes, is a well studied problem~\cite{driben2015resonant,oreshnikov2015interaction,wright2015ultrabroadband,conforti2015parametric,oreshnikov2017dispersive} and the common trait in this setting, independent on the nature of the soliton oscillations, is that the dispersive radiation produced (generated or scattered) by the soliton is polychromatic, i.e.\ it consists of several isolated spectral components. This is indeed what we see in the output spectrum on panel~\ref{fig:Fig6}c. To explain this behavior let us return to equations~\eqref{eq:PerturbationEquation} and~\eqref{eq:ScatteredFieldEquation}. In the oscillating case the individual solitons $U_{1}$ and $U_{2}$ are no longer represented by a single spatial frequency $\propto e^{i k_{1} z}$ and $\propto e^{i k_{2} z}$, but instead each of them corresponds to a Fourier series
 \begin{equation*}
   U_{n}(z, t) =
     \sum \limits_{N \in \mathbb{Z}}
@@ -316,12 +316,18 @@ where $Z_{0}$ is the oscillation period. This leads to a split in resonance cond
 \end{gather}
 here $N \in \mathbb{Z}$ selects the harmonic.
 
-The resonance conditions for the scattering process in the last simulation displayed on panel~\ref{fig:Fig5}d. In this process only the last two equations~\eqref{eq:Type0ResonanceCondition} and~\eqref{eq:Type1ResonanceCondition} are relevant. The solid black lines correspond to equation~\eqref{eq:Type0ResonanceCondition} with harmonics $N = -3, \dots, 0$. This harmonic split leads not only to the reflected part of the radiation \circled{1} becoming polychromatic, but also has the same effect on the incident component \circled{i}. Resonance condition~\eqref{eq:Type1ResonanceCondition} is represented by the gray dashed lines for harmonics $N = -3, \dots, +3$. It contributes to the scattered radiation twice: with a wide band \circled{2} that otherwise would degenerate into a sharp spectral line in a non-oscillating case, and with three wide spectral lines in vicinity of \circled{3} which is the contribution of the lower harmonics $N = -3, -2, -1$. One can notice that there is only two vertical lines corresponding to the numeric solution of~\eqref{eq:Type1ResonanceCondition} displayed around \circled{3}. This is merely due to a small numeric error in estimating the soliton wavenumber $k_{2}$ in the plotting procedure, which causes harmonic $N=-1$ to touch the dispersive rather than intersect it.
+The resonance conditions for the scattering process in the last simulation displayed on panel~\ref{fig:Fig6}d. In this process only the last two equations~\eqref{eq:Type0ResonanceCondition} and~\eqref{eq:Type1ResonanceCondition} are relevant. The solid black lines correspond to equation~\eqref{eq:Type0ResonanceCondition} with harmonics $N = -3, \dots, 0$. This harmonic split leads not only to the reflected part of the radiation \circled{1} becoming polychromatic, but also has the same effect on the incident component \circled{i}. Resonance condition~\eqref{eq:Type1ResonanceCondition} is represented by the gray dashed lines for harmonics $N = -3, \dots, +3$. It contributes to the scattered radiation twice: with a wide band \circled{2} that otherwise would degenerate into a sharp spectral line in a non-oscillating case, and with three wide spectral lines in vicinity of \circled{3} which is the contribution of the lower harmonics $N = -3, -2, -1$. One can notice that there is only two vertical lines corresponding to the numeric solution of~\eqref{eq:Type1ResonanceCondition} displayed around \circled{3}. This is merely due to a small numeric error in estimating the soliton wavenumber $k_{2}$ in the plotting procedure, which causes harmonic $N=-1$ to touch the dispersive rather than intersect it.
 
 \begin{figure}[t]
-  \includegraphics{{Figures/Fig5}.pdf}
-  \caption{(color online) Scattering of an intensive DW with carrier frequency  $\omega_{\text{inc}} = 1.100$ on a soliton with first-component carrier frequency $\omega_{1} = 1.010$. (a) time-domain view (b.1, 2) soliton amplitude and central frequency oscillations (c) output spectrum (d) resonance condition diagram.}%
-  \label{fig:Fig5}
+  \includegraphics{{Figures/Fig6}.pdf}
+  \caption{(color online) Scattering of an intensive DW with carrier frequency  $\omega_{\text{inc}} = 1.100$~rad/fs on a soliton with first-component carrier frequency $\omega_{1} = 1.010$~rad/fs. (a) time-domain view (b.1, 2) soliton amplitude and central frequency oscillations (c) output spectrum (d) resonance condition diagram.}%
+  \label{fig:Fig6}
+\end{figure}
+
+\begin{figure}[t]
+  \includegraphics{{Figures/Fig7}.pdf}
+  \caption{(color online) Scattering of an intensive DW with carrier frequency  $\omega_{\text{inc}} = 1.100$~rad/fs on a soliton with first-component carrier frequency $\omega_{1} = 1.010$~rad/fs. (a) time-domain view (b.1, 2) soliton amplitude and central frequency oscillations (c) output spectrum (d) resonance condition diagram.}%
+  \label{fig:Fig7}
 \end{figure}
 
 \section{Conclusion}
