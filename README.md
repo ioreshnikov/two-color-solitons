@@ -14,7 +14,7 @@ The second directory, `text`, contains TeX source of the paper and the figures.
 
 The code is written in `python`, version `3.5` is the oldest one that we have tried. To execute the project `Makefile` you need `make` installed on your machine.
 
-# Installation
+## Installation
 
 We strongly advise you run an installation in a virtual environment. You can do this by running
 
@@ -30,7 +30,7 @@ Then from inside the environment you can install the package by running
 
 ## Reproducing the results
 
-We have tried to make the result reproduction as straightforward as possible. All the actions necessary to build the paper from scratch are defined in the makefile at the root of the project. To run all the simulations and compile the draft of the paper you activate the environment from the root of the project
+We have tried to make the result reproduction as straightforward as possible. All the actions necessary to build the paper from scratch are defined in the Makefile at the root of the project. To run all the simulations and compile the draft of the paper you activate the environment from the root of the project
 
     $ . venv/bin/activate
 
