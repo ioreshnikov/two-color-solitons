@@ -26,9 +26,10 @@ def sech(x):
 
 
 # The function below is a copy (with alterations to formatting) of the
-# original implementation by O. Melchert in his code Ocean Code
-# capsule "Code and data for FMAS_MS" that can be found here
+# original implementation by O. Melchert in his Ocean Code capsule
+# "Code and data for FMAS_MS" that can be found here
 #     https://codeocean.com/capsule/0624342
+
 
 def to_analytic(ut):
     """

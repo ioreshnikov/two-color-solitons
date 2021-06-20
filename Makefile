@@ -131,6 +131,44 @@ scattering_1.150_$(ext): $(addprefix 1.150_, $(addsuffix .$(ext), $(INCIDENT_FRE
 .PHONY: scattering_1.085_ue_$(ext)
 scattering_1.085_ue_$(ext): $(addprefix 1.085_ue_, $(addsuffix .$(ext), $(INCIDENT_FREQS_2)))
 
+# Long-distance propagation of seed solitons
+# ------------------------------------------
+
+# XXX: It takes literally days to run the long-distance simulations.
+
+LD_SEED_FREQS = $(shell seq -f "1.%03.0f" 0 10 150)
+
+# This macros defines a seed soliton target (but this time for a long-distance simulation)
+define make-ld-seed-computation-target
+$(addsuffix _ld_seed.npz, $1):
+	python code/scripts/run_ld_seed_soliton_propagation.py -f1 $(strip $1) npz/$(strip $1)_ld_seed.npz
+endef
+
+# This macros plots the propagation results for the seed soliton (the long-distance one)
+define make-ld-seed-plotting-target
+$(addsuffix _ld_seed.$(ext), $1): $(addsuffix _ld_seed.npz, $1)
+	python code/scripts/plot_timedomain_freqdomain.py npz/$(strip $1)_ld_seed.npz fig/$(strip $1)_ld_seed.$(ext)
+endef
+
+$(foreach freq, $(LD_SEED_FREQS), $(eval $(call make-ld-seed-computation-target, $(freq))))
+$(foreach freq, $(LD_SEED_FREQS), $(eval $(call make-ld-seed-plotting-target, $(freq))))
+
+.PHONY: ld_seed_npz
+ld_seed_npz: $(addsuffix _ld_seed.npz, $(LD_SEED_FREQS))
+
+.PHONY: ld_seed_$(ext)
+ld_seed_$(ext): $(addsuffix _ld_seed.$(ext), $(LD_SEED_FREQS))
+
+define make-ext-soliton-parameters-target
+$(addsuffix _ld_seed_sp.npz, $1): $(addsuffix _ld_seed.npz, $1)
+	python code/scripts/ext_soliton_parameters.py npz/$(strip $1)_ld_seed.npz npz/$(strip $1)_ld_seed_sp.npz
+endef
+
+$(foreach freq, $(LD_SEED_FREQS), $(eval $(call make-ext-soliton-parameters-target, $(freq))))
+
+.PHONY: ld_seed_sp_npz
+ld_seed_sp_npz: $(addsuffix _ld_seed_sp.npz, $(LD_SEED_FREQS))
+
 
 # Special computational targets
 # =============================
@@ -139,52 +177,6 @@ scattering_1.085_ue_$(ext): $(addprefix 1.085_ue_, $(addsuffix .$(ext), $(INCIDE
 # covered by the brute force approach.
 1.070_1.650.npz: 1.070_seed.npz
 	python code/scripts/run_weak_scattering_on_filtered_soliton.py -fi 1.650 npz/1.070_seed.npz npz/1.070_1.650.npz
-
-# Long-distance propagation of seed solitons
-# ------------------------------------------
-
-# XXX: It takes literally days to run the long-distance simulations.
-
-1.010_seed_ld.npz:
-	python code/scripts/run_seed_soliton_propagation_ld.py -f1 1.010 npz/1.010_seed_ld.npz
-# ^^^ this simulation is an example where we cannot suppress one of
-# the radiation bands an it leaks through the absorbing layer and then
-# saturates the entire time domain in about 5 cm of simulation
-# distance. It's a catastrophe, don't waste your time on this one :)
-
-1.010_seed_ld.png: 1.010_seed_ld.npz
-	python code/scripts/plot_timedomain_outspectrum.py --no-rescon npz/1.010_seed_ld.npz fig/1.010_seed_ld.png
-
-1.070_seed_ld.npz:
-	python code/scripts/run_seed_soliton_propagation_ld.py -f1 1.070 npz/1.070_seed_ld.npz
-
-1.070_seed_ld.png: 1.070_seed_ld.npz
-	python code/scripts/plot_timedomain_outspectrum.py --no-rescon npz/1.070_seed_ld.npz fig/1.070_seed_ld.png
-
-1.085_ue_seed_ld.npz:
-	python code/scripts/run_seed_soliton_propagation_ld.py -f1 1.085 -t1 30.000 -t2 10.000 npz/1.085_ue_seed_ld.npz
-
-1.085_ue_seed_ld.png: 1.085_ue_seed_ld.npz
-	python code/scripts/plot_timedomain_outspectrum.py --no-rescon npz/1.085_ue_seed_ld.npz fig/1.085_ue_seed_ld.png
-
-.PHONY: seed_ld_npz
-seed_ld_npz: 1.010_seed_ld.npz 1.070_seed_ld.npz 1.085_ue_seed_ld.npz
-
-# Long-distance propagation of filtered solitons
-# ----------------------------------------------
-
-1.010_filt_ld.npz:
-	python code/scripts/run_filtered_soliton_propagation_ld.py npz/1.010_seed.npz npz/1.010_filt_ld.npz
-# ^^^ the same problem as the unfiltered case.
-
-1.070_filt_ld.npz:
-	python code/scripts/run_filtered_soliton_propagation_ld.py npz/1.070_seed.npz npz/1.070_filt_ld.npz
-
-1.085_ue_filt_ld.npz:
-	python code/scripts/run_filtered_soliton_propagation_ld.py npz/1.085_ue_seed.npz npz/1.085_ue_filt_ld.npz
-
-.PHONY: filt_ld_npz
-filt_ld_npz: 1.010_filt_ld.npz 1.070_filt_ld.npz 1.085_ue_filt_ld.npz
 
 
 # Figures for the paper
