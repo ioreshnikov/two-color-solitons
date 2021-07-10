@@ -1,7 +1,15 @@
 #!/usr/bin/env python3
 
 
-from argparse import ArgumentParser
+__doc__ = """
+This script produces a three-panel plot of the simulation results. The
+first panel is the time domain view, the second one is the input
+and the output spectrum of the simulation and the third one is the
+resonance condition diagram.
+"""
+
+
+import argparse
 
 from matplotlib import pyplot as plot
 from matplotlib import colors
@@ -20,15 +28,9 @@ from common.helpers import (
 from common.plotter import XSMALL_FONT_SIZE, pr_setup, pr_publish
 
 
-parser = ArgumentParser()
-parser.add_argument(
-    "--no-timedomain",
-    help="hide time domain plot",
-    action="store_true")
-parser.add_argument(
-    "--no-rescon",
-    help="hide resonance conditions panel",
-    action="store_true")
+parser = argparse.ArgumentParser(
+    description=__doc__,
+    formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument(
     "--vmin",
     help="minimun value for intensity plots",
@@ -62,6 +64,11 @@ t1 = npz["t1"]; t2 = npz["t2"]
 f1 = npz["f1"]; f2 = npz["f2"]
 a1, a2, t1, t2, f1, f2 = estimate_soliton_parameters(
     t, u0, a1, a2, t1, t2, f1, f2)
+
+# Read the incident frequency (if present)
+fi = None
+if "fi" in npz:
+    fi = npz["fi"]
 
 
 # Now that we have estimated everything, we don't need the full output
@@ -114,7 +121,7 @@ k12_too_close = abs(k1 - k2).max() < 0.01
 # in plotting them.
 
 rfs = []
-if "fi" not in npz:
+if not fi:
     # Resonance frequencies for Cherenkov radiation as predicted by
     # the theory:
     # 1. Cherenkov radiation due to first soliton component.
@@ -132,7 +139,6 @@ if "fi" not in npz:
 else:
     # If it's a scattering problem, then we are interested only in the
     # scattering resonances.
-    fi = npz["fi"]
     framei = beta(f1) + beta1(f1) * (fi - f1)
     bi = beta(fi) - framei
 
@@ -162,58 +168,39 @@ peaks = peaks_close_to(f, v1, rfs)
 # Finally, we plot everything.
 pr_setup()
 
-npanels = 3
 height_ratios = [2/3, 2/3, 1]
-
-if args.no_timedomain:
-    npanels -= 1
-    height_ratios = height_ratios[1:]
-
-if args.no_rescon:
-    npanels -= 1
-    height_ratios = height_ratios[:-1]
-
 plot.figure(
     figsize=(3.2, sum(1.4 * h for h in height_ratios)))
-gs = gridspec.GridSpec(npanels, 1, height_ratios=height_ratios)
-
-
-panelidx = 0
-def panel_label(n):
-    """Render panel label based on panel index"""
-    return "({})".format(chr(ord("a") + n))
+gs = gridspec.GridSpec(3, 1, height_ratios=height_ratios)
 
 
 # First panel (optional): time-domain plot
-if not args.no_timedomain:
-    plot.subplot(gs[panelidx])
-    plot.pcolormesh(
-        z, t, u.T**2,
-        # cmap="inferno",
-        cmap="jet",
-        norm=colors.LogNorm(vmin=args.vmin),
-        rasterized=True,
-        shading="auto")
-    plot.xlim(z.min(), z.max())
-    plot.ylim(-1.0, +1.0)
-    plot.yticks([-1.0, 0.0, +1.0])
-    plot.xlabel(r"Distance $z$, cm")
-    plot.ylabel(r"Delay $t$, ps")
-    plot.colorbar()
+plot.subplot(gs[0])
+plot.pcolormesh(
+    z, t, u.T**2,
+    # cmap="inferno",
+    cmap="jet",
+    norm=colors.LogNorm(vmin=args.vmin),
+    rasterized=True,
+    shading="auto")
+plot.xlim(z.min(), z.max())
+plot.ylim(-1.0, +1.0)
+plot.yticks([-1.0, 0.0, +1.0])
+plot.xlabel(r"Distance $z$, cm")
+plot.ylabel(r"Delay $t$, ps")
+plot.colorbar()
 
-    plot.annotate(
-        panel_label(panelidx),
-        xy=(0.0, 0.0),
-        xytext=(+6.0, +6.0),
-        xycoords="axes fraction",
-        textcoords="offset points",
-        color="white")
-
-    panelidx += 1
+plot.annotate(
+    "(a)",
+    xy=(0.0, 0.0),
+    xytext=(+6.0, +6.0),
+    xycoords="axes fraction",
+    textcoords="offset points",
+    color="white")
 
 
 # Second panel: input and output spectra
-ax = plot.subplot(gs[panelidx])
+ax = plot.subplot(gs[1])
 plot.plot(f, v0**0.5, color="black", linewidth=0.5, label="in",  zorder=10)
 plot.plot(f, v1**0.5, color="gray",  linewidth=1.0, label="out", alpha=0.75)
 
@@ -225,20 +212,12 @@ plot.ylabel(r"$\left| \tilde u(\omega) \right|^{1/2}$, a.\,u.")
 ax.xaxis.set_major_locator(MultipleLocator(0.5))
 
 plot.annotate(
-    panel_label(panelidx),
+    "(b)",
     xy=(1.0, 1.0),
     xytext=(-16.0, -12.0),
     xycoords="axes fraction",
     textcoords="offset points",
     bbox=dict(boxstyle="circle", pad=0.1, fc="white", ec="white"))
-
-panelidx += 1
-
-if args.no_rescon:
-    # If we don't plot the resonance conditions we're done.
-    plot.tight_layout(pad=4.0)
-    pr_publish(args.output)
-    exit()
 
 
 for rf in rfs:
@@ -249,8 +228,7 @@ for rf in rfs:
         zorder=-10)
 
 level = max(pv for _, pv in peaks)
-if "fi" in npz:
-    fi = npz["fi"]
+if fi:
     idx = abs(f - fi).argmin()
     level = max(level, v1[idx])
 
@@ -263,8 +241,7 @@ for n, (pf, _) in enumerate(peaks, start=1):
         bbox=dict(boxstyle="circle", pad=0.15, fc="white", ec="black", linewidth=0.5),
         fontsize=XSMALL_FONT_SIZE)
 
-if "fi" in npz:
-    fi = npz["fi"]
+if fi:
     plot.annotate(
         r"$i$",
         xy=(fi, level),
@@ -275,13 +252,13 @@ if "fi" in npz:
 
 
 # Third panel (optional): Resonance condition
-ax = plot.subplot(gs[panelidx])
+ax = plot.subplot(gs[2])
 
 # Limits in k (better not to rely on the automatic ones)
 kmins = [b0[(f > f1) & (f < f2)].min()]
 kmaxs = [b0.max()]
 
-if "fi" not in npz:
+if not fi:
     # Again, if it's not a scattering problem, we deal only with
     # Cherenkov radiation.
     plot.plot(f, k1, color="black", linestyle="solid", label="$k_{1}$")
@@ -320,7 +297,7 @@ else:
     # resonances.
     ncolumns = 0
 
-    if len(srfi) > 1:
+    if srfi:
         ncolumns += 1
         plot.plot(
             f, bi * numpy.ones_like(f),
@@ -359,7 +336,7 @@ plot.ylabel(r"$k$, rad/$\mu$m")
 plot.xlabel(r"Frequency $\omega$, rad/fs")
 ax.xaxis.set_major_locator(MultipleLocator(0.5))
 
-if "fi" in npz and len(srf21) and len(srf12) and not k12_too_close:
+if fi and len(srf21) and len(srf12) and not k12_too_close:
     # Ok, this is a bit more complicated :) If we try to draw the
     # legend as usual then the labels will not fit. What we want to do
     # is to combine the labels for FWVM resonances into one (with ±
@@ -387,7 +364,7 @@ if "fi" in npz and len(srf21) and len(srf12) and not k12_too_close:
 
     plot.legend(
         [pb0[0], Stub],
-        [r"$\beta(\omega_{i})$", r"$\mp k_{2} \pm k_{1} + \beta(\omega_{i})$"],
+        [r"$\beta(\omega_{i})$", r"$\pm k_{2} \mp k_{1} + \beta(\omega_{i})$"],
         ncol=ncolumns,
         loc="upper center",
         handler_map={Stub: FWVMHanlder()})
@@ -395,7 +372,7 @@ else:
     plot.legend(ncol=ncolumns, loc="upper center")
 
 plot.annotate(
-    panel_label(panelidx),
+    "(c)",
     xy=(0.0, 0.0),
     xytext=(+16.0, +6.0),
     xycoords="axes fraction",
@@ -420,8 +397,7 @@ for n, (pf, _) in enumerate(peaks, start=1):
         bbox=dict(boxstyle="circle", pad=0.15, fc="white", ec="black", linewidth=0.5),
         fontsize=XSMALL_FONT_SIZE)
 
-if "fi" in npz:
-    fi = npz["fi"]
+if fi:
     idx = abs(f - fi).argmin()
     level = b0[idx]
     plot.annotate(

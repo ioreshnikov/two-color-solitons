@@ -43,6 +43,7 @@ from common.helpers import (
     gv_matching_frequencies,
     fundamental_soliton_amplitude)
 from common.solver import gnlse
+from common.plotter import gpc_setup
 
 
 logging.basicConfig(
@@ -117,11 +118,15 @@ def filtered_gamma(f):
     return g
 
 
+# Setup interactive plotting
+gpc = gpc_setup(z, t, title=r"$\omega_{{1}} = {:.3f}$".format(f1))
+
+
 # Integrate the initial condition.
 result = gnlse(
     z, t, u0,
     filtered_beta, filtered_gamma,
-    kerr_op, dt=10)
+    kerr_op, dt=10, gpc=gpc)
 
 if not result.successful:
     logging.error(

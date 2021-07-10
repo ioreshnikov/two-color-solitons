@@ -81,7 +81,7 @@ u0 = numpy.roll(u0, idx_zero - idx_max)
 
 # We're done with the soliton. Let us proceed with the dispersive wave.
 # first we pick the amplitude.
-ai = 0.01 * abs(u0).max()
+ai = 0.05 * abs(u0).max()
 fi = args.fi
 ti =  300
 t0 = 1000
