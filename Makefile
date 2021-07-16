@@ -246,7 +246,7 @@ draft: fig
 # ====================
 .PHONY: draft.zip
 draft.zip:
-	pushd text && \
+	cd text && \
 	zip draft.zip Draft.tex Bibliography.bib Figures/*.pdf && \
 	mv draft.zip .. && \
-	popd
+	cd -
