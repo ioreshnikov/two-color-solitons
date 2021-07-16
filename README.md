@@ -38,7 +38,7 @@ and then run
 
     $ make draft
 
-This will product the draft of the paper and put it inside `text` directory.
+This will produce the draft of the paper and put it inside `text` directory.
 
 ## Acknowledgment
 
