@@ -41,6 +41,7 @@ from common.fiber import (
 from common.helpers import (
     sech, to_analytic,
     gv_matching_frequencies,
+    frame_of_reference,
     fundamental_soliton_amplitude)
 from common.solver import gnlse
 from common.plotter import gpc_setup
@@ -106,15 +107,15 @@ u0 = to_analytic((u1 + u2).real)
 # Construct a frequency filtered and group velocity compensated
 # dispersive profile.
 def filtered_beta(f):
-    b = beta(f) - beta(f1) - beta1(f1) * (f - f1)
-    b[(f <= 0) | (f >= 0.75 * f.max())] = 0
+    b = beta(f) - frame_of_reference(f, f1)
+    b[(f <= 0.5) | (f >= 0.75 * f.max())] = 0
     return b
 
 
 # Frequency filter the nonlinear coefficient.
 def filtered_gamma(f):
     g = gamma(f)
-    g[(f <= 0) | (f >= 0.75 * f.max())] = 0
+    g[(f <= 0.5) | (f >= 0.75 * f.max())] = 0
     return g
 
 

@@ -1,8 +1,14 @@
+import logging
+
 import matplotlib
 from matplotlib import colors
 from matplotlib import pyplot as plot
 import numpy
-from numpy import fft
+
+from .helpers import freqs
+
+
+logging.getLogger("matplotlib").setLevel(logging.WARNING)
 
 
 COLOR_BLUE1 = "#0072b2"
@@ -88,7 +94,10 @@ def pr_publish(filename, dpi=None):
     plot.savefig(filename, dpi=dpi)
 
 
-def gpc_setup(z, t, vmin=1E-6, title=None):
+def gpc_setup(
+    z, t,
+    tmin=None, tmax=None, fmin=None, fmax=None,
+    vmin=1E-6, title=None, cols=1):
     """
     Setup gridpoint callback to be passed to the solver.
 
@@ -107,14 +116,28 @@ def gpc_setup(z, t, vmin=1E-6, title=None):
     # at this point, but will come from the solver.
     nz = len(z)
     nt = len(t)
-    dt = t[1] - t[0]
 
-    f = 2 * numpy.pi * fft.fftshift(fft.fftfreq(nt, dt))
+    f = freqs(t, shift=True)
+
+    if fmin is None:
+        fmin = f.min()
+
+    if fmax is None:
+        fmax = f.max()
+
+    if tmin is None:
+        tmin = t.min()
+
+    if tmax is None:
+        tmax = t.max()
 
     # The images we get are excessively large. We are going to
     # sub-sample everything for faster rendering.
-    sst = int(nt / 1024)
-    nt = int(nt / sst)
+    if nt > 1024:
+        sst = nt // 1024
+    else:
+        sst = 1
+    nt = nt // sst
 
     # Prepare the stand-in for the future data matrices
     _ = numpy.empty((nz, nt))
@@ -129,22 +152,27 @@ def gpc_setup(z, t, vmin=1E-6, title=None):
     t = t / 1E3
 
     # Prepare the panels with the stand-in matrix
-    plot.subplot(2, 1, 1)
-    mesh1 = plot.pcolormesh(
-        z, t[::sst], _.T,
-        cmap="jet",
-        norm=colors.LogNorm(vmin=vmin, vmax=1))
-    plot.xlabel(r"Distance $z$, cm")
-    plot.ylabel(r"Delay $t$, ps")
+    meshes = []
+    for col in range(cols):
+        plot.subplot(2, cols, 2 * col + 1)
+        mesh1 = plot.pcolormesh(
+            z, t[::sst], _.T,
+            cmap="jet",
+            norm=colors.LogNorm(vmin=vmin, vmax=1))
+        plot.ylim(tmin, tmax)
+        plot.xlabel(r"Distance $z$, cm")
+        plot.ylabel(r"Delay $t$, ps")
 
-    plot.subplot(2, 1, 2)
-    mesh2 = plot.pcolormesh(
-        z, f[::sst], _.T,
-        cmap="jet",
-        norm=colors.LogNorm(vmin=vmin, vmax=1))
-    plot.ylim(0.0, 4.0)
-    plot.xlabel(r"Distance $z$, cm")
-    plot.ylabel(r"Frequency $\omega$, rad/fs")
+        plot.subplot(2, cols, 2 * col + 2)
+        mesh2 = plot.pcolormesh(
+            z, f[::sst], _.T,
+            cmap="jet",
+            norm=colors.LogNorm(vmin=vmin, vmax=1))
+        plot.ylim(fmin, fmax)
+        plot.xlabel(r"Distance $z$, cm")
+        plot.ylabel(r"Frequency $\omega$, rad/fs")
+
+        meshes.append([mesh1, mesh2])
 
     plot.ion()
     plot.show(block=False)
@@ -152,22 +180,28 @@ def gpc_setup(z, t, vmin=1E-6, title=None):
 
     # Construct the callback and return it
     def gpc(z, t, f, u, v):
-        u = u[:, ::sst]
-        v = v[:, ::sst]
+        for col in range(cols):
+            if cols == 1:
+                u_ = u[:, ::sst]
+                v_ = v[:, ::sst]
+            else:
+                u_ = u[:, ::sst, col]
+                v_ = v[:, ::sst, col]
 
-        # Scale to [0, 1] interval
-        u = abs(u) / abs(u).max()
-        v = abs(v) / abs(v).max()
+            # Scale to [0, 1] interval
+            u_ = abs(u_) / abs(u).max()
+            v_ = abs(v_) / abs(v).max()
 
-        # Rotate it appropriately and then switch to instantaneous
-        # intensity
-        u = u.T**2
-        v = v.T**2
+            # Rotate it appropriately and then switch to instantaneous
+            # intensity
+            u_ = u_.T**2
+            v_ = v_.T**2
 
-        mesh1.set_array(u[:-1, :-1].ravel())
-        mesh2.set_array(v[:-1, :-1].ravel())
-        #                 ^^^ yes, super weird :)
+            meshes[col][0].set_array(u_[:-1, :-1].ravel())
+            meshes[col][1].set_array(v_[:-1, :-1].ravel())
+            #                          ^^^ yes, super weird :)
 
         plot.pause(1E-3)
 
     return gpc
+

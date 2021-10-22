@@ -24,7 +24,7 @@ import numpy
 
 from common.fiber import beta, beta1, gamma, kerr_op
 from common.solver import gnlse
-from common.helpers import filter_tails, to_analytic
+from common.helpers import filter_tails, frame_of_reference, to_analytic
 from common.plotter import gpc_setup
 
 
@@ -127,15 +127,15 @@ z = numpy.linspace(0, zmax, int(1E3))
 # Construct a frequency filtered and group velocity compensated
 # dispersive profile.
 def filtered_beta(f):
-    b = beta(f) - beta(f1) - beta1(f1) * f
-    b[(f <= 0) | (f >= 0.75 * f.max())] = 0
+    b = beta(f) - frame_of_reference(f, f1)
+    b[(f <= 0.5) | (f >= 0.75 * f.max())] = 0
     return b
 
 
 # Frequency filter the nonlinear coefficient.
 def filtered_gamma(f):
     g = gamma(f)
-    g[(f <= 0) | (f >= 0.75 * f.max())] = 0
+    g[(f <= 0.5) | (f >= 0.75 * f.max())] = 0
     return g
 
 

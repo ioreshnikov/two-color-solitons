@@ -1,10 +1,11 @@
 """
-This module defines the physical parameters for the fiber used in
-Melchert et al. Soliton Molecules with Two Frequencies. Phys. Rev.
-Lett. 123, 243905. The original paper uses micrometers and
-femtoseconds as fundamental unit of distance and time. Since we are
-copying much of the constants from the paper directly, it is safer to
-use the same unit system throughout the code.
+Physical parameters of the fiber.
+
+We are using a reference model from Melchert et al. Soliton Molecules with Two
+Frequencies. Phys. Rev. Lett. 123, 243905. The original paper uses micrometers
+and femtoseconds as fundamental unit of distance and time. Since we are with
+the same physical setting, it is safer to adopt the same unit system
+throughout the code.
 """
 
 
@@ -28,6 +29,8 @@ _beta = _omega / cumfs * _numer / _denom
 
 def beta(f):
     """
+    Propagation constant in the model fiber.
+
     This function defines the propagation constant in the model fiber
     as a function of frequency.
 
@@ -67,7 +70,6 @@ def beta2(f):
 
     Parameters
     ----------
-
     f : array_like
         an array of frequencies
 
@@ -81,8 +83,7 @@ def beta2(f):
 
 def gamma(f):
     """
-    This function defines the frequency-dependent Kerr nonlinearity
-    coefficient.
+    Frequency-dependent Kerr nonlinearity coefficient.
 
     Parameters
     ----------
@@ -97,7 +98,7 @@ def gamma(f):
     return 3/8 * f**2 / cumfs**2 / beta(f)
 
 
-def kerr_op(z, t, u):
+def kerr_op(z, t, u):  # noqa: D205, D400
     """
     Kerr nonlinearity operator with a signature suitable for GLNSE
     solver.

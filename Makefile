@@ -211,36 +211,36 @@ scattering_1.010_int_$(ext): $(addprefix 1.010_, $(addsuffix _int.$(ext), $(INCI
 # with a lower amplitude to try to work around the nonlinearity of the
 # frequency oscillations itself.
 
-RC_FREQS = $(shell seq -f "%1.3f" 1.050 0.010 1.200; seq -f "%1.3f" 1.300 0.050 1.500)
+RC_FREQS = $(shell seq -f "%1.3f" 1.050 0.010 1.200; seq -f "%1.3f" 1.250 0.050 1.350)
 
 define make-rc-computation-target
-$(addprefix $(addsuffix _, $1), $(addsuffix _rc.npz, $2)): $(addsuffix _seed, $1).npz
-	python code/scripts/run_intensive_scattering_on_filtered_soliton.py -ai 0.020 -fi $2 npz/$(strip $1)_seed.npz npz/$(strip $1)_$(strip $2)_rc.npz
+$(addprefix $(addsuffix _, $1), $(addsuffix _rc10.npz, $2)): $(addsuffix _seed, $1).npz
+	python code/scripts/run_intensive_scattering_on_filtered_soliton.py -ai 0.010 -fi $2 npz/$(strip $1)_seed.npz npz/$(strip $1)_$(strip $2)_rc10.npz
 endef
 
 define make-rc-soliton-parameters-target
-$(addprefix $(addsuffix _, $1), $(addsuffix _rc_sp.npz, $2)): $(addprefix $(addsuffix _, $1), $(addsuffix _rc.npz, $2))
-	python code/scripts/extract_soliton_parameters.py npz/$(strip $1)_$(strip $2)_rc.npz npz/$(strip $1)_$(strip $2)_rc_sp.npz
+$(addprefix $(addsuffix _, $1), $(addsuffix _rc10_sp.npz, $2)): $(addprefix $(addsuffix _, $1), $(addsuffix _rc10.npz, $2))
+	python code/scripts/extract_soliton_parameters.py npz/$(strip $1)_$(strip $2)_rc10.npz npz/$(strip $1)_$(strip $2)_rc10_sp.npz
 endef
 
 $(foreach freq, $(RC_FREQS), $(eval $(call make-rc-computation-target,        1.010, $(freq))))
 $(foreach freq, $(RC_FREQS), $(eval $(call make-rc-soliton-parameters-target, 1.010, $(freq))))
 
-.PHONY: scattering_1.010_rc_npz
-scattering_1.010_rc_npz: $(addprefix 1.010_, $(addsuffix _rc.npz, $(RC_FREQS)))
+.PHONY: scattering_1.010_rc10_npz
+scattering_1.010_rc10_npz: $(addprefix 1.010_, $(addsuffix _rc10.npz, $(RC_FREQS)))
 
-.PHONY: scattering_1.010_rc_sp
-scattering_1.010_rc_sp: $(addprefix 1.010_, $(addsuffix _rc_sp.npz, $(RC_FREQS)))
+.PHONY: scattering_1.010_rc10_sp
+scattering_1.010_rc10_sp: $(addprefix 1.010_, $(addsuffix _rc10_sp.npz, $(RC_FREQS)))
 
 define make-rc-exploratory-plot-target  # just for exploratory needs
-$(addprefix $(addsuffix _, $1), $(addsuffix _rc_sp.$(ext), $2)): $(addprefix $(addsuffix _, $1), $(addsuffix _rc.npz, $2)) $(addprefix $(addsuffix _, $1), $(addsuffix _rc_sp.npz, $2))
-	python code/scripts/plot_fig_5.py npz/$(strip $1)_$(strip $2)_rc.npz npz/$(strip $1)_$(strip $2)_rc_sp.npz fig/$(strip $1)_$(strip $2)_rc_sp.png
+$(addprefix $(addsuffix _, $1), $(addsuffix _rc10_sp.$(ext), $2)): $(addprefix $(addsuffix _, $1), $(addsuffix _rc10.npz, $2)) $(addprefix $(addsuffix _, $1), $(addsuffix _rc10_sp.npz, $2))
+	python code/scripts/plot_fig_5.py npz/$(strip $1)_$(strip $2)_rc10.npz npz/$(strip $1)_$(strip $2)_rc10_sp.npz fig/$(strip $1)_$(strip $2)_rc10_sp.png
 endef
 
 $(foreach freq, $(RC_FREQS), $(eval $(call make-rc-exploratory-plot-target, 1.010, $(freq))))
 
-.PHONY: scattering_1.010_rc_$(ext)
-scattering_1.010_rc_$(ext): $(addprefix 1.010_, $(addsuffix _rc_sp.$(ext), $(RC_FREQS)))
+.PHONY: scattering_1.010_rc10_$(ext)
+scattering_1.010_rc10_$(ext): $(addprefix 1.010_, $(addsuffix _rc10_sp.$(ext), $(RC_FREQS)))
 
 
 # Special computational targets
@@ -267,6 +267,47 @@ fig2b.png: 1.070_1.650.npz
 fig2c.png: 1.070_1.675.npz
 	python code/scripts/plot_timedomain_spectrum_rescon.py --vmin 1E-7 npz/1.070_1.675.npz fig/fig2c.png
 
+# Still trying to figure out the scattering we see in Fig3 :) Here we do a
+# separate pass at simulating the scattering field only using the linearized
+# equation.
+
+# FIG2
+1.070_1.650_lin_pot_12.npz: 1.070_seed.npz
+	python code/scripts/run_linearized_scattering_on_filtered_soliton.py npz/1.070_seed.npz npz/1.070_1.650_lin_pot_12.npz -fi 1.650 -t pot.1 12 --title "Fig. 2, (12)"
+
+1.070_1.650_lin_pot_12_13.npz: 1.070_seed.npz
+	python code/scripts/run_linearized_scattering_on_filtered_soliton.py npz/1.070_seed.npz npz/1.070_1.650_lin_pot_12_13.npz -fi 1.650 -t pot.1 12 13 --title "Fig. 2, + (12) + (13)"
+
+1.070_1.650_lin_pot_12_13_14.npz: 1.070_seed.npz
+	python code/scripts/run_linearized_scattering_on_filtered_soliton.py npz/1.070_seed.npz npz/1.070_1.650_lin_pot_12_13_14.npz -fi 1.650 -t pot.1 12 13 14 --title "Fig. 2, + (12) + (13) + (14)"
+
+1.070_1.650_lin_pot_12_13_14_15.npz: 1.070_seed.npz
+	python code/scripts/run_linearized_scattering_on_filtered_soliton.py npz/1.070_seed.npz npz/1.070_1.650_lin_pot_12_13_14_15.npz -fi 1.650 -t pot.1 12 13 14 15 --title "Fig. 2, + (12) + (13) + (14) + (15)"
+
+.PHONY: 1.070_1.650_lin.npz
+1.070_1.650_lin.npz: 1.070_1.650_lin_pot_12.npz 1.070_1.650_lin_pot_12_13.npz 1.070_1.650_lin_pot_12_13_14.npz 1.070_1.650_lin_pot_12_13_14_15.npz
+
+
+# FIG3
+1.150_1.500_lin_pot_12.npz: 1.070_seed.npz
+	python code/scripts/run_linearized_scattering_on_filtered_soliton.py npz/1.150_seed.npz npz/1.070_1.500_lin_pot_12.npz -fi 1.650 -t pot 12 --title "Fig. 3, Pot. + (12)"
+
+1.150_1.500_lin_pot_12_13.npz: 1.070_seed.npz
+	python code/scripts/run_linearized_scattering_on_filtered_soliton.py npz/1.150_seed.npz npz/1.070_1.500_lin_pot_12_13.npz -fi 1.650 -t pot 12 13 --title "Fig. 3, Pot. + (12) + (13)"
+
+1.150_1.500_lin_pot_12_13_14.npz: 1.070_seed.npz
+	python code/scripts/run_linearized_scattering_on_filtered_soliton.py npz/1.150_seed.npz npz/1.070_1.500_lin_pot_12_13_14.npz -fi 1.650 -t pot 12 13 14 --title "Fig. 3, Pot. + (12) + (13) + (14)"
+
+1.150_1.500_lin_pot_12_13_14_15.npz: 1.070_seed.npz
+	python code/scripts/run_linearized_scattering_on_filtered_soliton.py npz/1.150_seed.npz npz/1.070_1.500_lin_pot_12_13_14_15.npz -fi 1.650 -t pot 12 13 14 15 --title "Fig. 3, Pot. + (12) + (13) + (14) + (15)"
+
+.PHONY: 1.150_1.500_lin.npz
+1.150_1.500_lin.npz: 1.150_1.500_lin_pot_12.npz 1.150_1.500_lin_pot_12_13.npz 1.150_1.500_lin_pot_12_13_14.npz 1.150_1.500_lin_pot_12_13_14_15.npz
+
+# # FIG4
+# 1.085_ue_3.500_lin.npz: 1.085_ue_seed.npz
+# 	python code/scripts/run_linearized_scattering_on_filtered_soliton.py npz/1.085_ue_seed.npz npz/1.085_ue_3.500_lin.npz -fi 3.500 -t 12 13
+
 
 # Figures for the paper
 # ===============================================
@@ -289,8 +330,8 @@ Fig5.pdf: 1.010_2.100_int.npz 1.010_2.100_int_sp.npz
 Fig6.pdf: 1.010_1.100_int.npz 1.010_1.100_int_sp.npz
 	python code/scripts/plot_fig_6.py --vmin 5E-6 npz/1.010_1.100_int.npz npz/1.010_1.100_int_sp.npz fig/Fig6.pdf
 
-Fig7.pdf: 1.010_seed.npz $(addprefix 1.010_, $(addsuffix _rc_sp.npz, $(RC_FREQS)))
-	python code/scripts/plot_fig_7.py npz/1.010_1.100_int.npz $(addprefix npz/1.010_, $(addsuffix _rc_sp.npz, $(RC_FREQS))) fig/Fig7.pdf
+Fig7.pdf: 1.010_seed.npz $(addprefix 1.010_, $(addsuffix _rc10_sp.npz, $(RC_FREQS)))
+	python code/scripts/plot_fig_7.py npz/1.010_1.100_int.npz $(addprefix npz/1.010_, $(addsuffix _rc10_sp.npz, $(RC_FREQS))) fig/Fig7.pdf
 
 .PHONY: fig
 fig: Fig1.pdf Fig2.pdf Fig3.pdf Fig4.pdf Fig5.pdf Fig6.pdf

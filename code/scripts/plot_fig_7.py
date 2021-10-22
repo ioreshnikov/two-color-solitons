@@ -8,7 +8,6 @@ This script produces a resonance curve plot.
 
 import argparse
 import os
-import re
 
 from matplotlib import pyplot as plot
 import numpy
@@ -16,7 +15,7 @@ from scipy.ndimage import uniform_filter1d
 from scipy.optimize import curve_fit
 
 from common.fiber import beta, beta1, beta2, gamma
-from common.helpers import frame_of_reference
+from common.helpers import frame_of_reference, zeros_on_a_grid
 from common.plotter import COLOR_BLACK, COLOR_GREY, pr_setup, pr_publish
 
 
@@ -46,9 +45,9 @@ args = parser.parse_args()
 npz = numpy.load(args.seed)
 
 u0 = npz["u"][-1, :]
-a1 = npz["a1"]; a2 = npz["a2"]
-t1 = npz["t1"]; t2 = npz["t2"]
-f1 = npz["f1"]; f2 = npz["f2"]
+a1 = npz["a1"]; a2 = npz["a2"]  # noqa: E702
+t1 = npz["t1"]; t2 = npz["t2"]  # noqa: E702
+f1 = npz["f1"]; f2 = npz["f2"]  # noqa: E702
 
 
 fis = []
@@ -117,35 +116,55 @@ for filename in args.input:
 fis = numpy.array(fis)
 dfs = numpy.array(dfs)
 
-dfs = dfs[fis < 1.5]
-fis = fis[fis < 1.5]
+dfs = dfs[fis < 1.4]
+fis = fis[fis < 1.4]
+
+
+f = numpy.linspace(fis.min(), fis.max(), 1000)
+frame = frame_of_reference(f, f1)
+b = beta(f) - frame
+k0sq = (
+    -8 * gamma(f1) * gamma(f2) /
+    (t1**2 + t2**2) ** (3/2) * (
+        beta2(f1) * t1 * a1**2 + beta2(f2) * t2 * a2**2
+    ))
+k0 = numpy.sqrt(k0sq) * numpy.ones_like(f)
+f0 = zeros_on_a_grid(f, b + k0)
 
 
 pr_setup()
-plot.figure(figsize=(3.2, 2.8))
+plot.figure(figsize=(3.2, 2.6))
 
 
 plot.subplot(2, 1, 1)
 
+
 # Let's try to find a Gaussian in the left part of the plot
-def gaussian(x, *params):
+def gaussian(x, *params):  # noqa: D401
+    """A single Gaussian distribution."""
     a, x0, dx = params
     return a * numpy.exp(-(x - x0)**2 / dx**2)
 
 params, _ = curve_fit(gaussian, fis, dfs, p0=[0.1, 1.0, 0.5])
-f = numpy.linspace(fis.min(), fis.max(), 1000)
+af, xf, dxf = params
+
 
 plot.scatter(fis, dfs, marker="x", s=10, label="Simulation", color=COLOR_BLACK)
-plot.plot(f, gaussian(f, *params), label="Gaussian fit", color=COLOR_GREY)
+plot.plot(
+    f, gaussian(f, af, xf, dxf),
+    label="Gaussian fit",
+    color=COLOR_GREY)
+
 plot.axvline(
-    1.109,
+    f0,
     color=COLOR_GREY,
-    linewidth=0.25,
+    linewidth=0.33,
     linestyle="dotted",
     zorder=-10)
 plot.xlim(f.min(), f.max())
+plot.ylim(0.00, 0.03)
 plot.xlabel(r"Incident frequency $\omega_{i}$, rad/fs")
-plot.ylabel(r"Amplitude $\Delta \omega_{2}$, rad/fs")
+plot.ylabel(r"max. $\Delta \omega_{2}$, rad/fs")
 plot.legend()
 
 plot.annotate(
@@ -158,29 +177,20 @@ plot.annotate(
 
 plot.subplot(2, 1, 2)
 
-frame = frame_of_reference(f, f1)
-b = beta(f) - frame
-k0sq = (
-    -8 * gamma(f1) * gamma(f2) /
-    (t1**2 + t2**2) ** (3/2) * (
-        beta2(f1) * t1 * a1**2 + beta2(f2) * t2 * a2**2
-    ))
-k0 = numpy.sqrt(k0sq) * numpy.ones_like(f)
-
 plot.plot(f, b, label=r"$\beta(\omega)$", color=COLOR_BLACK)
 plot.plot(f, +k0, label=r"$\pm K_0$", color=COLOR_GREY, linestyle="dotted")
 plot.plot(f, -k0, color=COLOR_GREY, linestyle="dotted")
 plot.axvline(
-    1.109,
+    f0,
     color=COLOR_GREY,
-    linewidth=0.25,
+    linewidth=0.33,
     linestyle="dotted",
     zorder=-10)
 plot.xlim(f.min(), f.max())
-plot.ylim(-0.02, +0.01)
+plot.ylim(-0.01, +0.01)
 plot.xlabel(r"Frequency $\omega$, rad/fs")
 plot.ylabel(r"$k$, rad/$\mu$m")
-plot.legend()
+plot.legend(ncol=2)
 
 plot.annotate(
     "(b)",
