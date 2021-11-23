@@ -42,6 +42,14 @@ parser.add_argument(
     type=float,
     default=2.000)
 parser.add_argument(
+    "-ai",
+    help=(
+        "amplitude of the incident dispersive wave "
+        "(in percentage of the soliton amplitude)"
+    ),
+    type=float,
+    default=0.050)
+parser.add_argument(
     "input",
     help="path to the input .npz file",
     type=str)
@@ -81,7 +89,7 @@ u0 = numpy.roll(u0, idx_zero - idx_max)
 
 # We're done with the soliton. Let us proceed with the dispersive wave.
 # first we pick the amplitude.
-ai = 0.05 * abs(u0).max()
+ai = args.ai * abs(u0).max()
 fi = args.fi
 ti =  300
 t0 = 1000

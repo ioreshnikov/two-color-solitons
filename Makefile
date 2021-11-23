@@ -1,10 +1,14 @@
 # General settings
 # ================
 
-ext = pdf
+# Default image extension (for exploratory plots)
+ext = png
 
 vpath %.npz npz
+vpath %.pdf fig
 vpath %.$(ext) fig
+
+.SUFFIXES: .npz .png .pdf
 
 
 # The computational targets in the sections below are left from the
@@ -177,57 +181,119 @@ $(addprefix $(addsuffix _, $1), $(addsuffix _int.npz, $2)): $(addsuffix _seed, $
 	python code/scripts/run_intensive_scattering_on_filtered_soliton.py -fi $2 npz/$(strip $1)_seed.npz npz/$(strip $1)_$(strip $2)_int.npz
 endef
 
-define make-intensive-scattering-plotting-td-fd-target
-$(addprefix $(addsuffix _, $1), $(addsuffix _int.$(ext), $2)): $(addprefix $(addsuffix _, $1), $(addsuffix _int.npz, $2))
-	python code/scripts/plot_timedomain_freqdomain.py npz/$(strip $1)_$(strip $2)_int.npz fig/$(strip $1)_$(strip $2)_int_td.$(ext)
+define make-intensive-scattering-soliton-parameters-target
+$(addprefix $(addsuffix _, $1), $(addsuffix _int_sp.npz, $2)): $(addprefix $(addsuffix _, $1), $(addsuffix _int.npz, $2))
+	python code/scripts/extract_soliton_parameters.py npz/$(strip $1)_$(strip $2)_int.npz npz/$(strip $1)_$(strip $2)_int_sp.npz
 endef
 
-define make-intensive-scattering-soliton-parameters-target
-$(addprefix $(addsuffix _, $1), $(addsuffix _sp.npz, $2)): $(addprefix $(addsuffix _, $1), $(addsuffix _int.npz, $2))
-	python code/scripts/extract_soliton_parameters.py npz/$(strip $1)_$(strip $2)_int.npz npz/$(strip $1)_$(strip $2)_sp.npz
+define make-intensive-scattering-exploratory-plot-target  # just for exploratory needs
+$(addprefix $(addsuffix _, $1), $(addsuffix _int.$(ext), $2)): $(addprefix $(addsuffix _, $1), $(addsuffix _int.npz, $2)) $(addprefix $(addsuffix _, $1), $(addsuffix _int_sp.npz, $2))
+	python code/scripts/plot_fig_5.py npz/$(strip $1)_$(strip $2)_int.npz npz/$(strip $1)_$(strip $2)_int_sp.npz fig/$(strip $1)_$(strip $2)_int.$(ext)
 endef
 
 $(foreach freq, $(INCIDENT_FREQS_1), $(eval $(call make-intensive-scattering-computation-target,        1.010, $(freq))))
 $(foreach freq, $(INCIDENT_FREQS_1), $(eval $(call make-intensive-scattering-soliton-parameters-target, 1.010, $(freq))))
+$(foreach freq, $(INCIDENT_FREQS_1), $(eval $(call make-intensive-scattering-exploratory-plot-target,   1.010, $(freq))))
 
 .PHONY: scattering_1.010_int_npz
 scattering_1.010_int_npz: $(addprefix 1.010_, $(addsuffix _int.npz, $(INCIDENT_FREQS_1)))
 
 .PHONY: scattering_1.010_int_sp
-scattering_1.010_int_sp: $(addprefix 1.010_, $(addsuffix _int_sp.npz, $(INCIDENT_FREQS_1)))
+scattering_1.010_sp_npz: $(addprefix 1.010_, $(addsuffix _int_sp.npz, $(INCIDENT_FREQS_1)))
+
+.PHONY: scattering_1.010_int_$(ext)
+scattering_1.010_int_$(ext): $(addprefix 1.010_, $(addsuffix _int.$(ext), $(INCIDENT_FREQS_1)))
+
+# Resonance curve around the internal oscillating mode
+# ----------------------------------------------------
+
+# This mostly repeats what is done with the larger intensive scattering, but
+# with a lower amplitude to try to work around the nonlinearity of the
+# frequency oscillations itself.
+
+RC_FREQS = $(shell seq -f "%1.3f" 1.050 0.010 1.200; seq -f "%1.3f" 1.300 0.050 1.500)
+
+define make-rc-computation-target
+$(addprefix $(addsuffix _, $1), $(addsuffix _rc.npz, $2)): $(addsuffix _seed, $1).npz
+	python code/scripts/run_intensive_scattering_on_filtered_soliton.py -ai 0.020 -fi $2 npz/$(strip $1)_seed.npz npz/$(strip $1)_$(strip $2)_rc.npz
+endef
+
+define make-rc-soliton-parameters-target
+$(addprefix $(addsuffix _, $1), $(addsuffix _rc_sp.npz, $2)): $(addprefix $(addsuffix _, $1), $(addsuffix _rc.npz, $2))
+	python code/scripts/extract_soliton_parameters.py npz/$(strip $1)_$(strip $2)_rc.npz npz/$(strip $1)_$(strip $2)_rc_sp.npz
+endef
+
+$(foreach freq, $(RC_FREQS), $(eval $(call make-rc-computation-target,        1.010, $(freq))))
+$(foreach freq, $(RC_FREQS), $(eval $(call make-rc-soliton-parameters-target, 1.010, $(freq))))
+
+.PHONY: scattering_1.010_rc_npz
+scattering_1.010_rc_npz: $(addprefix 1.010_, $(addsuffix _rc.npz, $(RC_FREQS)))
+
+.PHONY: scattering_1.010_rc_sp
+scattering_1.010_rc_sp: $(addprefix 1.010_, $(addsuffix _rc_sp.npz, $(RC_FREQS)))
+
+define make-rc-exploratory-plot-target  # just for exploratory needs
+$(addprefix $(addsuffix _, $1), $(addsuffix _rc_sp.$(ext), $2)): $(addprefix $(addsuffix _, $1), $(addsuffix _rc.npz, $2)) $(addprefix $(addsuffix _, $1), $(addsuffix _rc_sp.npz, $2))
+	python code/scripts/plot_fig_5.py npz/$(strip $1)_$(strip $2)_rc.npz npz/$(strip $1)_$(strip $2)_rc_sp.npz fig/$(strip $1)_$(strip $2)_rc_sp.png
+endef
+
+$(foreach freq, $(RC_FREQS), $(eval $(call make-rc-exploratory-plot-target, 1.010, $(freq))))
+
+.PHONY: scattering_1.010_rc_$(ext)
+scattering_1.010_rc_$(ext): $(addprefix 1.010_, $(addsuffix _rc_sp.$(ext), $(RC_FREQS)))
+
 
 # Special computational targets
 # =============================
 
-# This target defines a really nice scattering processes that is not
-# covered by the brute force approach.
+# This target defines a really nice scattering processes that is not covered
+# by the brute force approach. This is the simulation in Fig2.
 1.070_1.650.npz: 1.070_seed.npz
 	python code/scripts/run_weak_scattering_on_filtered_soliton.py -fi 1.650 npz/1.070_seed.npz npz/1.070_1.650.npz
+
+# These targets are here to explore the vicinity of Fig2.
+1.070_1.625.npz: 1.070_seed.npz
+	python code/scripts/run_weak_scattering_on_filtered_soliton.py -fi 1.625 npz/1.070_seed.npz npz/1.070_1.625.npz
+
+1.070_1.675.npz: 1.070_seed.npz
+	python code/scripts/run_weak_scattering_on_filtered_soliton.py -fi 1.675 npz/1.070_seed.npz npz/1.070_1.675.npz
+
+fig2a.png: 1.070_1.625.npz
+	python code/scripts/plot_timedomain_spectrum_rescon.py --vmin 1E-7 npz/1.070_1.625.npz fig/fig2a.png
+
+fig2b.png: 1.070_1.650.npz
+	python code/scripts/plot_timedomain_spectrum_rescon.py --vmin 1E-7 npz/1.070_1.650.npz fig/fig2b.png
+
+fig2c.png: 1.070_1.675.npz
+	python code/scripts/plot_timedomain_spectrum_rescon.py --vmin 1E-7 npz/1.070_1.675.npz fig/fig2c.png
 
 
 # Figures for the paper
 # ===============================================
 
-Fig1.$(ext): 1.010_filt.npz
-	python code/scripts/plot_timedomain_spectrum_rescon.py --vmin 1E-8 npz/1.010_filt.npz fig/Fig1.$(ext)
+Fig1.pdf: 1.010_filt.npz
+	python code/scripts/plot_timedomain_spectrum_rescon.py --vmin 1E-8 npz/1.010_filt.npz fig/Fig1.pdf
 
-Fig2.$(ext): 1.070_1.650.npz
-	python code/scripts/plot_timedomain_spectrum_rescon.py --vmin 1E-7 npz/1.070_1.650.npz fig/Fig2.$(ext)
+Fig2.pdf: 1.070_1.650.npz
+	python code/scripts/plot_timedomain_spectrum_rescon.py --vmin 1E-7 npz/1.070_1.650.npz fig/Fig2.pdf
 
-Fig3.$(ext): 1.150_1.500.npz
-	python code/scripts/plot_timedomain_spectrum_rescon.py --vmin 1E-7 npz/1.150_1.500.npz fig/Fig3.$(ext)
+Fig3.pdf: 1.150_1.500.npz
+	python code/scripts/plot_timedomain_spectrum_rescon.py --vmin 1E-7 npz/1.150_1.500.npz fig/Fig3.pdf
 
-Fig4.$(ext): 1.085_ue_3.500.npz
-	python code/scripts/plot_timedomain_spectrum_rescon.py --vmin 1E-7 npz/1.085_ue_3.500.npz fig/Fig4.$(ext)
+Fig4.pdf: 1.085_ue_3.500.npz
+	python code/scripts/plot_timedomain_spectrum_rescon.py --vmin 1E-7 npz/1.085_ue_3.500.npz fig/Fig4.pdf
 
-Fig5.$(ext): 1.010_1.100_int.npz 1.010_1.100_sp.npz
-	python code/scripts/plot_fig_5.py --vmin 5E-6 npz/1.010_1.100_int.npz npz/1.010_1.100_sp.npz fig/Fig5.$(ext)
+Fig5.pdf: 1.010_2.100_int.npz 1.010_2.100_int_sp.npz
+	python code/scripts/plot_fig_5.py --vmin 5E-6 npz/1.010_2.100_int.npz npz/1.010_2.100_int_sp.npz fig/Fig5.pdf
 
-Fig6.$(ext): 1.010_2.100_int.npz 1.010_2.100_sp.npz
-	python code/scripts/plot_fig_6.py --vmin 5E-6 npz/1.010_2.100_int.npz npz/1.010_2.100_sp.npz fig/Fig6.$(ext)
+Fig6.pdf: 1.010_1.100_int.npz 1.010_1.100_int_sp.npz
+	python code/scripts/plot_fig_6.py --vmin 5E-6 npz/1.010_1.100_int.npz npz/1.010_1.100_int_sp.npz fig/Fig6.pdf
+
+Fig7.pdf: 1.010_seed.npz $(addprefix 1.010_, $(addsuffix _rc_sp.npz, $(RC_FREQS)))
+	python code/scripts/plot_fig_7.py npz/1.010_1.100_int.npz $(addprefix npz/1.010_, $(addsuffix _rc_sp.npz, $(RC_FREQS))) fig/Fig7.pdf
 
 .PHONY: fig
-fig: Fig1.$(ext) Fig2.$(ext) Fig3.$(ext) Fig4.$(ext) Fig5.$(ext) Fig6.$(ext)
+fig: Fig1.pdf Fig2.pdf Fig3.pdf Fig4.pdf Fig5.pdf Fig6.pdf
 
 
 # Text targets
@@ -235,7 +301,7 @@ fig: Fig1.$(ext) Fig2.$(ext) Fig3.$(ext) Fig4.$(ext) Fig5.$(ext) Fig6.$(ext)
 
 .PHONY: draft
 draft: fig
-	cp fig/Fig*.$(ext) text/Figures/
+	cp fig/Fig*.pdf text/Figures/
 	cd text && pdflatex Draft.tex
 	cd text && bibtex Draft
 	cd text && pdflatex Draft.tex

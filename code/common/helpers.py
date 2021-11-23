@@ -269,6 +269,25 @@ def fundamental_soliton_width(amp, f0):
     return numpy.sqrt(abs(beta2(f0)) / gamma(f0)) / amp
 
 
+def frame_of_reference(f, f0):
+    """
+    Dispersive relation for a plane wave at a given carrier frequency.
+
+    Parameters
+    ----------
+    f : array_like
+        frequency grid
+    f0 : float
+        carrier frequency of the wave
+
+    Note
+    ----
+    This is useful when we want to calculate dispersive relationship of a
+    wave in a frame of reference co-moving with the soliton.
+    """
+    return beta(f0) + beta1(f0) * (f - f0)
+
+
 def _envelope_ansatz(x, f, a1, a2, t1, t2, f1, f2):
     nx = len(x)
     dx = x[1] - x[0]
