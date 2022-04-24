@@ -334,7 +334,7 @@ Fig7.pdf: 1.010_seed.npz $(addprefix 1.010_, $(addsuffix _rc10_sp.npz, $(RC_FREQ
 	python code/scripts/plot_fig_7.py npz/1.010_1.100_int.npz $(addprefix npz/1.010_, $(addsuffix _rc10_sp.npz, $(RC_FREQS))) fig/Fig7.pdf
 
 .PHONY: fig
-fig: Fig1.pdf Fig2.pdf Fig3.pdf Fig4.pdf Fig5.pdf Fig6.pdf
+fig: Fig1.pdf Fig2.pdf Fig3.pdf Fig4.pdf Fig5.pdf Fig6.pdf Fig7.pdf
 
 
 # Text targets
