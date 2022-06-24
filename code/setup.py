@@ -11,11 +11,11 @@ setup(
     author_email="oreshnikov.ivan@gmail.com",
     python_requires=">=3.5",
     install_requires=[
-        "humanize==3.5.0",
-        "matplotlib==3.3.0",
-        "numpy==1.19.1",
-        "scipy==1.5.2",
-        "sympy==1.6.1"
+        "humanize",
+        "matplotlib==3.3",
+        "numpy",
+        "scipy",
+        "sympy"
     ],
     scripts=[]
 )

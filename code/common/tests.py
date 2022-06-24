@@ -1,10 +1,21 @@
 import random
+import time
+import logging
 
-from unittest import TestCase
+from unittest import TestCase, skip
 import numpy
 
 from .solver import gnlse
-from .helpers import sech, to_analytic
+from .helpers import align_max, freqs, sech, to_analytic
+
+
+seed = int(time.time())
+random.seed(seed)
+
+print("seed is {}".format(seed))
+
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class SolitonTestCase(TestCase):
@@ -82,7 +93,7 @@ class SolitonTestCase(TestCase):
 
         beta3 = 0.15
 
-        def sod(f):
+        def tod(f):
             return - 1/2 * f**2 + 1/6 * beta3 * f**3
 
         def gamma(f):
@@ -95,7 +106,7 @@ class SolitonTestCase(TestCase):
         x = numpy.linspace(-20, +20, 1000)
         u0 = 3 / numpy.cosh(3*x)
 
-        result = gnlse(t, x, u0, sod, gamma, kerr)
+        result = gnlse(t, x, u0, tod, gamma, kerr)
         self.assertTrue(result.successful)
 
         f = result.k
@@ -177,9 +188,26 @@ class SolitonTestCase(TestCase):
             1E-3 * abs(uwa[outer]).max())
 
 
+def random_gaussian(x):
+    """
+    Generate a random Gaussian pulse.
+
+    Note
+    ----
+    Assyming x is symmetric.
+    """
+    a = random.uniform(1, 10)
+    c = random.uniform(x.min() / 4, x.max() / 4)
+    d = random.uniform(1, 10)
+    f = random.uniform(-1, +1)
+    u = a * numpy.exp(-(x - c)**2 / d**2) * numpy.exp(-1j * f * x)
+    return u
+
+
 class HelpersTestCase(TestCase):
     """
-    In here we test the miscellaneous helper functions.
+    In here we test the miscellaneous helper functions. Unfortunatelly this
+    doesn't cover everything from the helpers module.
     """
 
     def test_sech_is_inverse_of_cosh(self):
@@ -199,19 +227,23 @@ class HelpersTestCase(TestCase):
         2. Real and imaginary component are orthogonal over interval.
         """
 
-        # Construct a random Gaussian function
-        amp = 10 * random.random()
-        sigma = 10 * random.random()
-        omega = 20 * (random.random() - 0.5)
-        x0 = 10 * (random.random() - 0.5)
-        # ^^^ generates negative frequencies half the time
-
-        x = numpy.linspace(-50, +50, int(1E4))
-        u = (
-            amp * numpy.exp(- (x - x0)**2 / sigma**2)
-                * numpy.exp(-1j * omega * x))
+        x = numpy.linspace(-50, +50, 2**10)
+        u = random_gaussian(x)
         u = u.real
         z = to_analytic(u).real
 
         self.assertAlmostEqual(max(abs(u - z.real)), 0, places=10)
         self.assertAlmostEqual(sum(z.real * z.imag), 0, places=10)
+
+    def test_align_max_aligns_max(self):
+        """
+        Test that align_max actually puts the maximum of the function close to
+        the origin.
+        """
+        x = numpy.linspace(-50, +50, 2**10 + 1)
+        # ^^^ odd number of points to include 0
+        yrandom = random_gaussian(x)
+        ycenter, _ = align_max(x, yrandom)
+
+        idx = abs(ycenter).argmax()
+        self.assertEqual(x[idx], 0)

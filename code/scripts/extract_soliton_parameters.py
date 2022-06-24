@@ -13,12 +13,10 @@ require the group velocities of the individual components to be equal.
 import argparse
 
 from matplotlib import pyplot as plot
-from numpy import fft
 import numpy
 
 from common.helpers import (
-    _envelope_ansatz,
-    estimate_soliton_parameters)
+    _envelope_ansatz, freqs, estimate_soliton_parameters)
 
 
 parser = argparse.ArgumentParser(
@@ -45,8 +43,7 @@ t = npz["t"]
 u = npz["u"]
 v = npz["v"]
 
-f = fft.fftfreq(len(t), t[1] - t[0])
-f = 2 * numpy.pi * fft.fftshift(f)
+f = freqs(t, shift=True)
 
 
 # From the full output spectrum we estimate the final soliton

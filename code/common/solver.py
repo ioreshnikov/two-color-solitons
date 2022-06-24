@@ -1,3 +1,11 @@
+"""
+Solvers.
+
+Here we keep the numeric solvers needed for the paper, namely a GNLSE solver
+and a solver for the linearization operator spectral problem.
+"""
+
+
 from datetime import timedelta
 import logging
 import time
@@ -5,14 +13,15 @@ import time
 from humanize import precisedelta
 from scipy import fft
 from scipy import integrate
+from scipy import linalg
+from scipy import sparse
 import numpy
+
+from .helpers import freqs
 
 
 def _report_progress(n, nt, timer_start):
-    """
-    Report integration progress to the log.
-    """
-
+    """Report integration progress to the log."""
     progress = (n / nt)
     timer_current = time.time()
     timer_elapsed = timer_current - timer_start
@@ -63,7 +72,7 @@ class IntegrationResult:
     coordinate/frequency array.
     """
 
-    def __init__(self, t, x, k, u, v, error_code=None):
+    def __init__(self, t, x, k, u, v, error_code=None):  # noqa: D107
         self.t = t
         self.x = x
         self.k = fft.fftshift(k)
@@ -72,7 +81,8 @@ class IntegrationResult:
         self.error_code = error_code
 
     @property
-    def successful(self):
+    def successful(self):  # noqa: D400
+        """Was this run succesful?"""
         return self.error_code is None
 
 
@@ -121,15 +131,17 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None, gpc=None):
         the coordinate grid
     u0 : array_like
         the initial condition at t[0]
-    beta : callable with the signature of beta(f)
+    beta : callable with the signature of beta(k)
         the dispersive profile as a function of frequency
-    gamma : callable with the signature of gamma(f)
+    gamma : callable with the signature of gamma(k)
         frequency-dependent gain part of the nonlinear operator
     nonlin : callable with the signature of nonlin(t, x, u)
         time-domain part of the nonlinear operator
     lin : callable with the signature of lin(t, x, u)
         time-domain linear operator
-    gpc : callable with the signature of gcp(t, x, f, u, v)
+    dt : float, optional
+        an optional internal time step used for integration
+    gpc : callable with the signature of gcp(t, x, k, u, v)
         an optional callback executed after computing up to the next
         grid point
 
@@ -137,7 +149,6 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None, gpc=None):
     -------
     result : an instance of IntegrationResult
     """
-
     # Pre-allocate the output matrices.
     nt = len(t)
     nx = len(x)
@@ -147,27 +158,27 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None, gpc=None):
 
     # Put the initial conditions in time and frequency domains into
     # the output matrices
-    v0 = fft.ifft(u0)
+    v0 = fft.ifft(u0, norm="ortho")
     u[0, :] = u0
     v[0, :] = fft.fftshift(v0)
 
     # Prepare the frequency scale and evaluate beta on the scale
-    k = 2 * numpy.pi * fft.fftfreq(nx, x[1] - x[0])
-    D = beta(k)
+    k = freqs(x)
+    B = beta(k)
     G = gamma(k)
 
     # Prepare the RHS we feed to the solver
     def rhs(t_, v_):
         # Scale the spectrum by the accumulated phase shift due to
         # the dispersion and transform to coordinate space
-        exp = numpy.exp(1j * D * (t_ - t[0]))
-        u_ = fft.fft(exp * v_)
+        exp = numpy.exp(1j * B * (t_ - t[0]))
+        u_ = fft.fft(exp * v_, norm="ortho")
 
         # Apply nonlinear operator N() and, maybe, linear operator L()
         # as well, transform back to the modified spectrum and return.
-        ret = G * fft.ifft(nonlin(t, x, u_))
+        ret = G * fft.ifft(nonlin(t, x, u_), norm="ortho")
         if lin:
-            ret += fft.ifft(lin(t, x, u_))
+            ret += fft.ifft(lin(t, x, u_), norm="ortho")
 
         return 1j / exp * ret
 
@@ -222,8 +233,8 @@ def gnlse(t, x, u0, beta, gamma, nonlin, lin=None, dt=None, gpc=None):
 
         # Calculate the proper spectrum and then save the spectrum and
         # the coordinate representation into the output matrices.
-        exp = numpy.exp(1j * D * (t_ - t[0]))
-        u[n, :] = fft.fft(exp * v_)
+        exp = numpy.exp(1j * B * (t_ - t[0]))
+        u[n, :] = fft.fft(exp * v_, norm="ortho")
         v[n, :] = fft.fftshift(exp * v_)
 
         if gpc:

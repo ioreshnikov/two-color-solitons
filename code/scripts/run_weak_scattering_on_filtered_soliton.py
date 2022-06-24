@@ -99,7 +99,7 @@ if t0 * vg > 0:
     t0 = -t0
     logging.info("new soliton position t0 = {}".format(t0))
 
-dw = ai * numpy.exp(-(t - t0)**2 / ti**2) * numpy.exp(1j * fi * t)
+dw = ai * numpy.exp(-(t - t0)**2 / ti**2) * numpy.exp(- 1j * fi * t)
 u0 = to_analytic(u0.real + dw.real)
 
 
@@ -120,14 +120,14 @@ z = numpy.linspace(0, zmax, int(1E3))
 # dispersive profile.
 def filtered_beta(f):
     b = beta(f) - beta(f1) - beta1(f1) * f
-    b[(f <= 0) | (f >= 0.75 * f.max())] = 0
+    b[(f <= 0.5) | (f >= 0.75 * f.max())] = 0
     return b
 
 
 # Frequency filter the nonlinear coefficient.
 def filtered_gamma(f):
     g = gamma(f)
-    g[(f <= 0) | (f >= 0.75 * f.max())] = 0
+    g[(f <= 0.5) | (f >= 0.75 * f.max())] = 0
     return g
 
 

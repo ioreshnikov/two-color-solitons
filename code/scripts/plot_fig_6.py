@@ -19,15 +19,14 @@ from matplotlib import pyplot as plot
 from matplotlib import colors
 from matplotlib import gridspec
 from matplotlib.ticker import MultipleLocator
-from matplotlib.legend_handler import HandlerBase
 
-from numpy import fft
 import numpy
 
 from common.fiber import beta, beta1, gamma
 from common.helpers import (
     estimate_soliton_parameters,
     frame_of_reference,
+    freqs,
     fundamental_soliton_dispersive_relation,
     zeros_on_a_grid)
 from common.plotter import XSMALL_FONT_SIZE, pr_setup, pr_publish
@@ -58,14 +57,17 @@ npz = numpy.load(args.input)
 z = npz["z"]
 t = npz["t"]
 
-f = fft.fftfreq(len(t), t[1] - t[0])
-f = 2 * numpy.pi * fft.fftshift(f)
-
+f = freqs(t, shift=True)
 u = npz["u"]
 
 # From the full output spectrum we estimate the final soliton
-# parameters using the original values as an estimate
-u0 = u[0, :]
+# parameters using the original values as an estimate.
+
+# NOTE: The initial condition does not always give a good estimate of the soliton
+# parameters.
+iz = len(z) // 10
+u0 = u[iz, :]
+
 a1 = npz["a1"]; a2 = npz["a2"]
 t1 = npz["t1"]; t2 = npz["t2"]
 f1 = npz["f1"]; f2 = npz["f2"]
@@ -83,7 +85,7 @@ tw = (t > -1000) & (t < +1000)
 t = t[tw]
 u = u[:, tw]
 
-ssx = int(len(t) / 1000) or 1
+ssx = len(t) // 1000 or 1
 t = t[::ssx]
 u = u[:, ::ssx]
 
@@ -196,8 +198,8 @@ plot.annotate(
 # Second and third panel: soliton parameters
 plot.subplot(gs[1, 0])
 
-da1 = a1s - a1s[0]
-da2 = a2s - a2s[0]
+da1 = a1s - a1s[iz]
+da2 = a2s - a2s[iz]
 plot.plot(z, da1, color="black", label="1")
 plot.plot(z, da2, color="gray",  label="2")
 plot.legend(ncol=2, loc="upper center")
@@ -220,8 +222,8 @@ plot.annotate(
 
 plot.subplot(gs[1, 1])
 
-df1 = f1s - f1s[0]
-df2 = f2s - f2s[0]
+df1 = f1s - f1s[iz]
+df2 = f2s - f2s[iz]
 
 plot.plot(z, df1, color="black", label="1")
 plot.plot(z, df2, color="gray",  label="2")
@@ -269,7 +271,7 @@ plot.annotate(
 for rf in sum(rfs, []):
     plot.axvline(
         x=rf, color="gray",
-        linewidth=0.25,
+        linewidth=0.33,
         linestyle="dotted",
         zorder=-10)
 
@@ -352,7 +354,7 @@ plot.annotate(
 for rf in sum(rfs, []):
     plot.axvline(
         x=rf, color="gray",
-        linewidth=0.25,
+        linewidth=0.33,
         linestyle="dotted",
         zorder=-10)
 

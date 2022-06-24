@@ -1,3 +1,6 @@
+"""Auxiliary functions."""
+
+
 from scipy import fft
 from scipy import signal
 from scipy.optimize import minimize, root_scalar
@@ -9,7 +12,7 @@ from .fiber import beta, beta1, beta2, gamma
 
 def sech(x):
     """
-    Calculates hyperbolic secant of the input without overflowing.
+    Calculate hyperbolic secant of the input without overflowing.
 
     Parameters
     ----------
@@ -74,15 +77,38 @@ def to_analytic(ut):
         Marple, S. L. Jr. IEEE Trans. Sig. Proc., 47 (1999) 2600
     """
     zw = fft.ifft(ut)
-    zw[1:int(zw.size/2)] = 2 * zw[1:int(zw.size/2)]
-    zw[int(zw.size/2)+1:] = 0j
+    zw[1:(zw.size//2)] = 2 * zw[1:(zw.size//2)]
+    zw[(zw.size//2)+1:] = 0j
     return fft.fft(zw)
 
 
-def zeros_on_a_grid(x, y):
+def freqs(x, shift=False):
     """
-    Given a function evaluated on a grid, find points where the
-    function changes sign.
+    Construct corresponding frequency vector.
+
+    Parameters
+    ----------
+    x : array_like
+        coordinate grid
+    shift : bool
+        if True then perform fftshift on a result array before returning
+
+    Returns
+    -------
+    k : array_like
+        a vector of spatial frequencies
+    """
+    nx = len(x)
+    dx = x[1] - x[0]
+    k = 2 * numpy.pi * fft.fftfreq(nx, dx)
+    if shift:
+        k = fft.fftshift(k)
+    return k
+
+
+def zeros_on_a_grid(x, y, mode="midpoint"):
+    """
+    Find grid points where a function changes sign.
 
     Parameters
     ----------
@@ -90,11 +116,22 @@ def zeros_on_a_grid(x, y):
         coordinate grid
     y : array_like
         function evaluated on a grid
+    mode : string, either "midpoint" or "index"
+        in midpoint mode one gets the location of a zero approximated as
+        a midpoint between the grid points where the sign change occurs;
+        in index mode one gets the indices of corresponding points in `x`
     """
+
+    assert mode in ("index", "midpoint"), \
+        'only "index" and "midpoint" are allowed for `mode`'
+
     yp = y[:-1]
     yn = y[1:]
 
     mask = (yp * yn) < 0
+
+    if mode == "index":
+        return numpy.append([False], mask)
 
     xp = x[:-1][mask]
     xn = x[1:][mask]
@@ -104,8 +141,7 @@ def zeros_on_a_grid(x, y):
 
 def filter_tails(x, y, w=100):
     """
-    Filter the radiative tails from the soliton using a super-Gaussian
-    window.
+    Filter the radiative tails using a super-Gaussian window.
 
     Parameters
     ----------
@@ -121,7 +157,6 @@ def filter_tails(x, y, w=100):
     y' : array_like
         a filtered solution
     """
-
     # We construct a super-Gaussian window around the soliton peak.
     # Multiplying the soliton by that window we suppress the radiation
     # tails.
@@ -129,6 +164,30 @@ def filter_tails(x, y, w=100):
     x0 = x[idx_max]
     window = numpy.exp(- ((x - x0)/w)**8)
     return window * y
+
+
+def align_max(x, y):
+    """
+    Align maximum of signal y with x=0.
+
+    Parameters
+    ----------
+    x : array_like
+        coordinate grid
+    y : array_like
+        function to be aligned
+
+    Returns
+    -------
+    y' : array_like
+       the same function shifted so that max(y) is at x=0.
+    idx_diff : int
+       shift distance
+    """
+    idx_max = abs(y).argmax()
+    idx_zero = abs(x).argmin()
+    idx_diff = idx_zero - idx_max
+    return numpy.roll(y, idx_zero - idx_max), idx_diff
 
 
 def peaks_close_to(x, y, x0s):
@@ -150,7 +209,6 @@ def peaks_close_to(x, y, x0s):
     for the figures we use in the paper, but otherwise they're not
     tested. It is in no way generic.
     """
-
     result = []
 
     for x0 in x0s:
@@ -174,8 +232,7 @@ def peaks_close_to(x, y, x0s):
 
 def gv_matching_frequencies(f1):
     """
-    Given a frequency find another ones where the group velocity is the
-    same.
+    Given a frequency, find another ones with the same group velocity.
 
     Parameters
     ----------
@@ -187,7 +244,6 @@ def gv_matching_frequencies(f1):
     f2 : list(float)
         a list of frequencies f such that β₁(f1) = β₁(f2)
     """
-
     d = 1E-2
     if f1 < 2:
         f = numpy.arange(f1 + d, 5.0, d)
@@ -207,8 +263,7 @@ def gv_matching_frequencies(f1):
 
 def fundamental_soliton_amplitude(f0, t0):
     """
-    Calculate fundamental soliton amplitude for the given soliton
-    central frequency and the given width.
+    Fundamental soliton amplitude for a given frequency and width.
 
     Parameters
     ----------
@@ -227,7 +282,7 @@ def fundamental_soliton_amplitude(f0, t0):
 
 def fundamental_soliton_dispersive_relation(f0, t0, f):
     """
-    Dispersive relation for a fundamental soliton at given frequency.
+    Dispersive relation for a fundamental soliton at a given frequency.
 
     Parameters
     ----------
@@ -250,9 +305,9 @@ def fundamental_soliton_dispersive_relation(f0, t0, f):
 
 def fundamental_soliton_width(amp, f0):
     """
-    Calculate the fundamental soliton width given the central
-    frequency and the amplitude. Inverse function to
-    `fundamental_soliton_amplitude`.
+    Fundametal soliton width at a given frequency.
+
+    Inverse function to `fundamental_soliton_amplitude`.
 
     Parameters
     ----------
@@ -271,7 +326,7 @@ def fundamental_soliton_width(amp, f0):
 
 def frame_of_reference(f, f0):
     """
-    Dispersive relation for a plane wave at a given carrier frequency.
+    Dispersive relation for a plane wave at a given frequency.
 
     Parameters
     ----------
@@ -298,7 +353,7 @@ def _envelope_ansatz(x, f, a1, a2, t1, t2, f1, f2):
         a2 * t2 * sech(numpy.pi/2 * t2 * (f - f2)))
 
 
-def estimate_soliton_parameters(x, y, a1, a2, t1, t2, f1, f2, w=100, match_f=True):
+def estimate_soliton_parameters(x, y, a1, a2, t1, t2, f1, f2, w=100, match_f=True):  # noqa: E501
     """
     Estimate the parameters of the soliton in the field.
 
@@ -343,11 +398,9 @@ def estimate_soliton_parameters(x, y, a1, a2, t1, t2, f1, f2, w=100, match_f=Tru
         a 6-tuple of refined soliton parameters -- ampltiudes, temporal widths
         and central frequencies
     """
-
     y = filter_tails(x, y, w)
 
-    f = fft.fftfreq(len(x), x[1] - x[0])
-    f = 2 * numpy.pi * fft.fftshift(f)
+    f = freqs(x, shift=True)
     v = fft.fftshift(fft.ifft(y))
 
     fw = (f > 0.5) & (f < 4.0)
@@ -356,7 +409,7 @@ def estimate_soliton_parameters(x, y, a1, a2, t1, t2, f1, f2, w=100, match_f=Tru
 
     # Subsample spectrum and frequency if necessary. Around 500 points
     # should be enough for our estimations.
-    ssf = int(len(f) / 500)
+    ssf = len(f) // 500
     f = f[::ssf]
     v = v[::ssf]
 

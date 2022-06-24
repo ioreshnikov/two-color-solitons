@@ -54,6 +54,8 @@
 \author{Alexey Yulin}
 \affiliation{Department of Nanophotonics and Metamaterials, ITMO University, Kronverskiy pr. 49, 19701 St.~Petersburg, Russia}
 
+\date{\today}
+
 \begin{abstract}
   In dispersion landscapes with two separate regions of anomalous dispersion it is possible to create a quasi-stable two-color solitary wave. In this paper we consider how those waves interact with dispersive radiation, including the processes of Cherenkov radiation generation as well as the processes of external wave scattering. We derive the analytic resonance conditions and verify them through numeric experiments.
 \end{abstract}
@@ -223,13 +225,11 @@ where frequency $\omega_{1}$ is an arbitrary parameter (the only requirement is 
 \end{equation*}
 In most of the simulations in this paper we fix $T_{1} = T_{2} = 20$~fs and the amplitudes $A_{1}$ and $A_{2}$ are chosen as the fundamental soliton amplitudes at the corresponding frequencies. This configuration sheds significant amount of radiation and relaxes to a quasi-stable solitary wave. We take the output field of this seed simulation and suppress the radiation tails by multiplying it by a super-Gaussian window centered around the soliton peak. This isolated soliton serves as an input to the second simulation that is carried with the same parameters as the original one.
 
-Once we suppress the initial radiation that is shed by the seed soliton during the relaxation process, the isolated soliton propagates generating a narrow-spectrum Cherenkov radiation. As an example we can consider Fig.~\ref{fig:Fig1}. Panel Fig.~\ref{fig:Fig1}b shows a normalized spectral density at the output of the simulation. There one can notice that on top of the input spectrum (plotted by thin black line) arise two additional spectral lines in the output spectrum (plotted by thicker gray line). Panel Fig.~\ref{fig:Fig2}c demonstrates resonance conditions~\eqref{eq:CherenkovRadiationResonanceCondition} and~\eqref{eq:FWMRadiationResonanceCondition}: black curve corresponds to the left-hand's side of both equations $\beta(\omega)$, horizontal lines correspond to the right-hand's sides. Intersections between the dispersive curve and the horizontal lines that contribute to Cherenkov radiation are marked separately: \circled{1}~is the radiation due to the second component of the soliton as predicted by equation~\eqref{eq:CherenkovRadiationResonanceCondition}, \circled{2}~is due to beat between the components with wavenumber $2 k_{2} - k_{1}$ as predicted by~\eqref{eq:FWMRadiationResonanceCondition}.
-
-% A symmetric situation (resonances due to the second component and to beat with wavenumber $2 k_{1} - k_{2}$) turns out difficult to observe for the reasons yet unknown.
+Once we suppress the initial radiation that is shed by the seed soliton during the relaxation process, the isolated soliton propagates generating a narrow-spectrum Cherenkov radiation. As an example we can consider Fig.~\ref{fig:Fig1}. Panel Fig.~\ref{fig:Fig1}b shows normalized spectral densities at the input and the output of the simulation. The difference in spectra between the input and the output can be also seen in a logarithmic scale on panel Fig.~\ref{fig:Fig1}c. There one can notice that on top of the input spectrum (plotted by thin black line) arise two additional spectral lines in the output spectrum (plotted by thicker gray line). Panel Fig.~\ref{fig:Fig2}d demonstrates resonance conditions~\eqref{eq:CherenkovRadiationResonanceCondition} and~\eqref{eq:FWMRadiationResonanceCondition}: black curve corresponds to the left-hand's side of both equations $\beta(\omega)$, horizontal lines correspond to the right-hand's sides. Intersections between the dispersive curve and the horizontal lines that contribute to Cherenkov radiation are marked separately: \circled{1}~is the radiation due to the second component of the soliton as predicted by equation~\eqref{eq:CherenkovRadiationResonanceCondition}, \circled{2}~is due to beat between the components with wavenumber $2 k_{2} - k_{1}$ as predicted by~\eqref{eq:FWMRadiationResonanceCondition}.
 
 \begin{figure}[t]
   \includegraphics{{Figures/Fig1}.pdf}
-  \caption{(color online) Cherenkov radiation of an isolated soliton produced by the soliton with $\omega_{1} = 1.010$~rad/fs. (a) time-domain view (b) input and output spectra (c) resonance conditions diagram.}%
+  \caption{(color online) Cherenkov radiation of an isolated soliton produced by the soliton with $\omega_{1} = 1.010$~rad/fs. (a) time-domain view, (b) input and output spectra (c) spectra difference in log scale, and (d) resonance conditions diagram.}%
   \label{fig:Fig1}
 \end{figure}
 
@@ -246,19 +246,19 @@ To study the scattering processes we perform the seed simulation and isolate the
 \end{equation*}
 In this section we pick $A_{\text{inc}}$ as 1\% of the maximum amplitude of the isolated soliton and fix the width to 300~fs. Central location is chosen as $\pm1000$~fs from the soliton center (the sign depends on the relative group velocity between the soliton and the dispersive wave). In the process of evolution the incident radiation interacts with the soliton to produce the scattered radiation. This process can evolve in several different ways depending on the frequencies of the soliton and the incident radiation. In here we consider three concrete examples. In each of them the incident radiation is split between three different components.
 
-The first configuration we consider is very close to the degenerate case where the wavenumbers of the individual soliton components $k_{1}$ and $k_{2}$ coincide. Equation~\eqref{eq:Type1ResonanceCondition} then turns into equation~\eqref{eq:Type0ResonanceCondition}. This case resembles the case of fundamental single-component solitons~\cite{yulin2004four}. However, due to shape of the dispersive curve $\beta(\omega)$ there is now more than one nontrivial solution to equation~\eqref{eq:Type0ResonanceCondition} and a single incident frequency corresponds up to four possible resonances. This configuration can be seen in Fig.~\ref{fig:Fig1}. In practice, only some of them actually contribute to the scattered radiation. Again, those solution are separately marked on a diagram on panel~\ref{fig:Fig1}c: \circled{$i$} corresponds both to the incident and the partially transmitted radiation, \circled{1} is the reflected component and \circled{2} is the additional transmitted component.
+The first configuration we consider is very close to the degenerate case where the wavenumbers of the individual soliton components $k_{1}$ and $k_{2}$ coincide. Equation~\eqref{eq:Type1ResonanceCondition} then turns into equation~\eqref{eq:Type0ResonanceCondition}. This case resembles the case of fundamental single-component solitons~\cite{yulin2004four}. However, due to shape of the dispersive curve $\beta(\omega)$ there is now more than one nontrivial solution to equation~\eqref{eq:Type0ResonanceCondition} and a single incident frequency corresponds up to four possible resonances. This configuration can be seen in Fig.~\ref{fig:Fig1}. In practice, only some of them actually contribute to the scattered radiation. Again, those solution are separately marked on a diagram on panel~\ref{fig:Fig1}d: \circled{$i$} corresponds both to the incident and the partially transmitted radiation, \circled{1} is the reflected component and \circled{2} is the additional transmitted component.
 
 \begin{figure}[t]
   \includegraphics{{Figures/Fig2}.pdf}
-  \caption{(color online) Scattering of a weak DW with carrier frequency $\omega_{\text{inc}} = 1.650$~rad/fs on a soliton with first-component carrier frequency $\omega_{1} = 1.070$~rad/fs. (a) time-domain view (b) input and output spectra (c) resonance conditions diagram.}%
+  \caption{(color online) Scattering of a weak DW with carrier frequency $\omega_{\text{inc}} = 1.650$~rad/fs on a soliton with first-component carrier frequency $\omega_{1} = 1.070$~rad/fs. (a) time-domain view, (b) input and output spectra (c) spectra difference in log scale, and (d) resonance conditions diagram.}%
   \label{fig:Fig2}
 \end{figure}
 
-The second configuration (seen in Fig.~\ref{fig:Fig3}) is a case with significant difference between $k_{1}$ and $k_{2}$. Since~\eqref{eq:Type1ResonanceCondition} is no longer degenerate, the resonance diagram in Fig.~\ref{fig:Fig3}c is more complex. However, as one can notice, in that case only solution marked with \circled{2}, corresponding to the upper (i.e. ``$-, +$'') branch of~\eqref{eq:Type1ResonanceCondition}, contributes to the scattered radiation. Component \circled{1}, corresponding to the scattered radiation, comes from~\eqref{eq:Type0ResonanceCondition}. The unmarked spectral line close to $\omega \approx 2.4$ is the Cherenkov radiation of the soliton itself.
+The second configuration (seen in Fig.~\ref{fig:Fig3}) is a case with significant difference between $k_{1}$ and $k_{2}$. Since~\eqref{eq:Type1ResonanceCondition} is no longer degenerate, the resonance diagram in Fig.~\ref{fig:Fig3}d is more complex. However, as one can notice, in that case only solution marked with \circled{2}, corresponding to the upper (i.e. ``$-, +$'') branch of~\eqref{eq:Type1ResonanceCondition}, contributes to the scattered radiation. Component \circled{1}, corresponding to the scattered radiation, comes from~\eqref{eq:Type0ResonanceCondition}. The unmarked spectral line close to $\omega \approx 2.4$ is the Cherenkov radiation of the soliton itself.
 
 \begin{figure}[t]
   \includegraphics{{Figures/Fig3}.pdf}
-  \caption{(color online) Scattering of a weak DW with carrier frequency $\omega_{\text{inc}} = 1.500$~rad/fs on a soliton with first-component carrier frequency $\omega_{1} = 1.150$~rad/fs. (a) time-domain view (b) input and output spectra (c) resonance conditions diagram.}%
+  \caption{(color online) Scattering of a weak DW with carrier frequency $\omega_{\text{inc}} = 1.500$~rad/fs on a soliton with first-component carrier frequency $\omega_{1} = 1.150$~rad/fs. (a) time-domain view, (b) input and output spectra (c) spectra difference in log scale, and (d) resonance conditions diagram.}%
   \label{fig:Fig3}
 \end{figure}
 
@@ -266,7 +266,7 @@ The third configuration (seen in Fig.~\ref{fig:Fig4}) is, in a sense, symmetric 
 
 \begin{figure}[t]
   \includegraphics{{Figures/Fig4}.pdf}
-  \caption{(color online) Scattering of a weak DW with carrier frequency $\omega_{\text{inc}} = 3.500$~rad/fs on a soliton with first-component carrier frequency $\omega_{1} = 1.085$~rad/fs. (a) time-domain view (b) input and output spectra (c) resonance conditions diagram.}%
+  \caption{(color online) Scattering of a weak DW with carrier frequency $\omega_{\text{inc}} = 3.500$~rad/fs on a soliton with first-component carrier frequency $\omega_{1} = 1.085$~rad/fs. (a) time-domain view, (b) input and output spectra (c) spectra difference in log scale, and (d) resonance conditions diagram.}%
   \label{fig:Fig4}
 \end{figure}
 

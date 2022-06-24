@@ -9,8 +9,8 @@ from matplotlib import gridspec
 from matplotlib.ticker import MultipleLocator
 
 import numpy
-from numpy import fft
 
+from common.helpers import freqs
 from common.plotter import pr_setup, pr_publish
 
 
@@ -41,8 +41,7 @@ t = npz["t"]
 u = npz["u"]
 v = npz["v"]
 
-f = fft.fftfreq(len(t), t[1] - t[0])
-f = 2 * numpy.pi * fft.fftshift(f)
+f = freqs(t, shift=True)
 
 
 # Now that we have estimated everything, we don't need the full output
@@ -52,7 +51,7 @@ tw = (t > -1000) & (t < +2000)
 t = t[tw]
 u = u[:, tw]
 
-ssx = int(len(t) / 1000) or 1
+ssx = len(t) // 1000 or 1
 t = t[::ssx]
 u = u[:, ::ssx]
 
@@ -123,8 +122,10 @@ plot.annotate(
 # Second and third panel: soliton parameters
 plot.subplot(gs[1, 0])
 
-da1 = a1s - a1s[0]
-da2 = a2s - a2s[0]
+iz = len(z) // 10
+
+da1 = a1s - a1s[iz]
+da2 = a2s - a2s[iz]
 plot.plot(z, da1, color="black", label="1")
 plot.plot(z, da2, color="gray",  label="2")
 plot.legend(ncol=2, loc="upper center")
@@ -147,8 +148,8 @@ plot.annotate(
 
 plot.subplot(gs[1, 1])
 
-df1 = f1s - f1s[0]
-df2 = f2s - f2s[0]
+df1 = f1s - f1s[iz]
+df2 = f2s - f2s[iz]
 
 plot.plot(z, df1, color="black", label="1")
 plot.plot(z, df2, color="gray",  label="2")

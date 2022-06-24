@@ -7,8 +7,8 @@ from matplotlib import pyplot as plot
 from matplotlib import colors
 
 import numpy
-from numpy import fft
 
+from common.helpers import freqs
 from common.plotter import pr_setup, pr_publish
 
 
@@ -35,9 +35,7 @@ t = npz["t"]
 u = npz["u"]
 v = npz["v"]
 
-f = fft.fftfreq(len(t), t[1] - t[0])
-f = 2 * numpy.pi * fft.fftshift(f)
-
+f = freqs(t, shift=True)
 z = z / 1E4
 t = t / 1E3
 u = abs(u) / abs(u).max()
@@ -48,10 +46,10 @@ pr_setup()
 plot.figure(figsize=(6, 8))
 
 _, nt = u.shape
-sst = int(nt / 1024)
+sst = nt // 1024
 
 _, nf = v[:, (f >= 0) & (f <= 4)].shape
-ssf = int(nf / 1024)
+ssf = nf // 1024
 
 u = u[:, ::sst]
 v = v[:, ::ssf]

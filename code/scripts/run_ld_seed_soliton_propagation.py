@@ -119,7 +119,7 @@ def filtered_gamma(f):
     return g
 
 
-# XXX: Please notice, that in the filtered expressions above we
+# NOTE: Please notice, that in the filtered expressions above we
 # supress not only the very high frequencies, but also the the
 # frequencie below ω = 0.5. Potentially this might be wrong, but in
 # multiple simulations before we've seen a sharp numeric instability

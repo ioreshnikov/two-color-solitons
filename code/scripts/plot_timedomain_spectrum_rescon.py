@@ -14,16 +14,16 @@ import argparse
 from matplotlib import pyplot as plot
 from matplotlib import colors
 from matplotlib import gridspec
-from matplotlib.ticker import MultipleLocator
+from matplotlib.ticker import FixedLocator, MultipleLocator
 from matplotlib.legend_handler import HandlerBase
 
-from numpy import fft
 import numpy
 
-from common.fiber import beta, beta1, gamma
+from common.fiber import beta, gamma
 from common.helpers import (
     estimate_soliton_parameters,
     frame_of_reference,
+    freqs,
     fundamental_soliton_dispersive_relation,
     peaks_close_to, zeros_on_a_grid)
 from common.plotter import XSMALL_FONT_SIZE, pr_setup, pr_publish
@@ -52,9 +52,7 @@ npz = numpy.load(args.input)
 z = npz["z"]
 t = npz["t"]
 
-f = fft.fftfreq(len(t), t[1] - t[0])
-f = 2 * numpy.pi * fft.fftshift(f)
-
+f = freqs(t, shift=True)
 u = npz["u"]
 
 # From the full output spectrum we estimate the final soliton
@@ -79,7 +77,7 @@ tw = (t > -1000) & (t < +1000)
 t = t[tw]
 u = u[:, tw]
 
-ssx = int(len(t) / 1000) or 1
+ssx = len(t) // 1000 or 1
 t = t[::ssx]
 u = u[:, ::ssx]
 
@@ -169,14 +167,29 @@ peaks = peaks_close_to(f, v1, rfs)
 # Finally, we plot everything.
 pr_setup()
 
-height_ratios = [2/3, 2/3, 1]
+height_ratios = [2/3, 2/3, 1/4, 1]
 plot.figure(
     figsize=(3.2, sum(1.4 * h for h in height_ratios)))
-gs = gridspec.GridSpec(3, 1, height_ratios=height_ratios)
+
+outer_gs = gridspec.GridSpec(
+    2, 1,
+    height_ratios=[
+        height_ratios[0],
+        sum(height_ratios[1:])
+    ])
+
+inner_gs1 = gridspec.GridSpecFromSubplotSpec(
+    1, 1,
+    subplot_spec=outer_gs[0])
+inner_gs2 = gridspec.GridSpecFromSubplotSpec(
+    3, 1,
+    subplot_spec=outer_gs[1],
+    height_ratios=height_ratios[1:],
+    hspace=0.0)
 
 
 # First panel (optional): time-domain plot
-plot.subplot(gs[0])
+plot.subplot(inner_gs1[0])
 plot.pcolormesh(
     z, t, u.T**2,
     # cmap="inferno",
@@ -201,30 +214,21 @@ plot.annotate(
 
 
 # Second panel: input and output spectra
-ax = plot.subplot(gs[1])
+ax1 = plot.subplot(inner_gs2[0])
 plot.plot(f, v0**0.5, color="black", linewidth=0.5, label="in",  zorder=10)
 plot.plot(f, v1**0.5, color="gray",  linewidth=1.0, label="out", alpha=0.75)
 
 plot.legend(ncol=2, loc="upper center")
 plot.xlim(0.5, 4.0)
 plot.ylim(0.0, 1.4)
-plot.xlabel(r"Frequency $\omega$, rad/fs")
 plot.ylabel(r"$\left| \tilde u(\omega) \right|^{1/2}$, a.\,u.")
-ax.xaxis.set_major_locator(MultipleLocator(0.5))
-
-plot.annotate(
-    "(b)",
-    xy=(1.0, 1.0),
-    xytext=(-16.0, -12.0),
-    xycoords="axes fraction",
-    textcoords="offset points",
-    bbox=dict(boxstyle="circle", pad=0.1, fc="white", ec="white"))
-
+ax1.xaxis.set_major_locator(MultipleLocator(0.5))
+plot.setp(ax1.get_xticklabels(), visible=False)
 
 for rf in rfs:
     plot.axvline(
         x=rf, color="gray",
-        linewidth=0.25,
+        linewidth=0.33,
         linestyle="dotted",
         zorder=-10)
 
@@ -237,7 +241,7 @@ for n, (pf, _) in enumerate(peaks, start=1):
     plot.annotate(
         str(n),
         xy=(pf, level),
-        xytext=(-2.0, +12.0),
+        xytext=(-2.0, +16.0),
         textcoords="offset points",
         bbox=dict(boxstyle="circle", pad=0.15, fc="white", ec="black", linewidth=0.5),
         fontsize=XSMALL_FONT_SIZE)
@@ -246,14 +250,52 @@ if fi:
     plot.annotate(
         r"$i$",
         xy=(fi, level),
-        xytext=(-2.0, +12.0),
+        xytext=(-2.0, +16.0),
         textcoords="offset points",
         bbox=dict(boxstyle="circle", pad=0.15, fc="white", ec="black", linewidth=0.5),
         fontsize=XSMALL_FONT_SIZE)
 
+plot.annotate(
+    "(b)",
+    xy=(1.0, 1.0),
+    xytext=(-16.0, -12.0),
+    xycoords="axes fraction",
+    textcoords="offset points",
+    bbox=dict(boxstyle="circle", pad=0.1, fc="white", ec="white"))
 
-# Third panel (optional): Resonance condition
-ax = plot.subplot(gs[2])
+
+# Third panel: logarithmic view of the spectra difference
+ax2 = plot.subplot(inner_gs2[1], sharex=ax1)
+de = abs(abs(v1) - abs(v0))
+de /= de.max()
+
+plot.semilogy(f, de, color="black", linewidth=0.5)
+
+plot.xlim(0.5, 4.0)
+plot.ylim(1E-3, 1.0)
+
+ax2.xaxis.set_major_locator(MultipleLocator(0.5))
+ax2.yaxis.set_major_locator(FixedLocator([1E-3]))
+plot.setp(ax2.get_xticklabels(), visible=False)
+
+for rf in rfs:
+    plot.axvline(
+        x=rf, color="gray",
+        linewidth=0.33,
+        linestyle="dotted",
+        zorder=-10)
+
+plot.annotate(
+    "(c)",
+    xy=(1.0, 1.0),
+    xytext=(-16.0, -12.0),
+    xycoords="axes fraction",
+    textcoords="offset points",
+    bbox=dict(boxstyle="circle", pad=0.1, fc="white", ec="white"))
+
+
+# Fourth panel: resonance condition
+ax3 = plot.subplot(inner_gs2[2], sharex=ax1)
 
 # Limits in k (better not to rely on the automatic ones)
 kmins = [b0[(f > f1) & (f < f2)].min()]
@@ -330,12 +372,28 @@ kmin = min(kmins)
 kmax = max(kmaxs)
 margin = 0.25 * (kmax - kmin)
 
+kmin -= margin
+kmax += 2*margin
+
+ticks = numpy.linspace(kmin, kmax, 5)
+ticks = ticks[:-1]
+
 pb0 = plot.plot(f, b0, color="black")
 plot.xlim(0.5, 4.0)
-plot.ylim(kmin - margin, kmax + 2*margin)
+plot.ylim(kmin, kmax)
 plot.ylabel(r"$k$, rad/$\mu$m")
 plot.xlabel(r"Frequency $\omega$, rad/fs")
-ax.xaxis.set_major_locator(MultipleLocator(0.5))
+ax3.xaxis.set_major_locator(MultipleLocator(0.5))
+
+# If the top tick is way to high we need to drop it.
+yticks = [
+    tick
+    for tick in ax3.get_yticks()
+    if tick <= kmax
+]
+if (kmax - yticks[-1]) / (kmax - kmin) < 0.1:
+    yticks = yticks[:-1]
+    ax3.set_yticks(yticks)
 
 if fi and len(srf21) and len(srf12) and not k12_too_close:
     # Ok, this is a bit more complicated :) If we try to draw the
@@ -373,9 +431,9 @@ else:
     plot.legend(ncol=ncolumns, loc="upper center")
 
 plot.annotate(
-    "(c)",
-    xy=(0.0, 0.0),
-    xytext=(+16.0, +6.0),
+    "(d)",
+    xy=(1.0, 1.0),
+    xytext=(-16.0, -12.0),
     xycoords="axes fraction",
     textcoords="offset points",
     bbox=dict(boxstyle="circle", pad=0.1, fc="white", ec="white"))
@@ -383,7 +441,7 @@ plot.annotate(
 for rf in rfs:
     plot.axvline(
         x=rf, color="gray",
-        linewidth=0.25,
+        linewidth=0.33,
         linestyle="dotted",
         zorder=-10)
 

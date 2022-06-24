@@ -1,24 +1,43 @@
-\documentclass[a4paper,11pt]{article}
+\documentclass[a4paper, 11pt]{article}
+\pdfoutput=1
 
 
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{authblk}
 \usepackage[utf8]{inputenc}
 
 
 \newcommand{\abs}[1]{\left| #1 \right|}
-
-\title{Supplementary Material}
-\date{\today}
+\renewcommand{\theequation}{S.\arabic{equation}}
 
 
 \begin{document}
 
+\title{Supplementary Material}
+
+\author[1]{Ivan Oreshnikov}
+\author[2,3,4]{Oliver Melchert}
+\author[2,3]{Stephanie Willms}
+\author[3]{Surajit Bose}
+\author[2,3]{Ihar Babushkin}
+\author[2,3,4]{Ayhan Demircan}
+\author[5]{Alexey Yulin}
+
+\affil[1]{Max Planck Institute for Intelligent Systems, Max-Planck-Ring 4, 72076 T\"ubingen, Germany}
+\affil[2]{Cluster of Exellence PhoenixD, Welfengarten 1, 30167 Hannover, Germany}
+\affil[3]{Institute of Quantum Optics, Leibniz Universit\"at Hannover, Welfengarten 1, 30167 Hannover, Germany}
+\affil[4]{Hannover Centre for Optical Technologies, Neinburger Strasse 17, 30167 Hannover, Germany}
+\affil[5]{Department of Nanophotonics and Metamaterials, ITMO University, Kronverskiy pr. 49, 19701 St.~Petersburg, Russia}
+
+\date{\today}
+
 \maketitle
+
 
 \section*{Small internal oscillations of the soliton}
 
-When analyzing the nonlinear scattering near an oscillatory mode we have used an expression for the oscillation frequency. In this section we will derive this expression.
+When analyzing the nonlinear scattering near an oscillatory mode we used an expression for the oscillation frequency. In this section we will derive this expression.
 
 Let us return to equation (3) for coupled solitons. We can re-normalize the equations by performing the following transformation
 \begin{equation*}
@@ -64,7 +83,11 @@ Let us assume that the soliton components $U_{n}$ can be described by the follow
     - i \Omega_{n}(z) t + i \phi_{n}(z)
   \right).
 \end{equation}
-In here $A_{n}$ is the amplitude of the pulse, $t_{n}$ is the central position, $\sigma_{n}$ is the pulse width, $\Omega_{n}$ is the frequency detuning, $\phi_{n}$ is the phase, and $S(x)$ is function that defines the envelope shape. At the moment we will not specify the concrete form of $S(x)$, but will assume that it is an even function. Substituting \eqref{eq:SolitonAnsatz} into \eqref{eq:SingleSolitonLagrangianDensity} and \eqref{eq:InteractionLagrangianDensity} and integrating over $t$ we arrive at the expressions for the averaged Lagrangians
+In here $A_{n}$ is the amplitude of the pulse, $t_{n}$ is the central position, $\sigma_{n}$ is the pulse width, $\Omega_{n}$ is the frequency detuning, $\phi_{n}$ is the phase, and $S(x)$ is function that defines the envelope shape. At the moment we will not specify the concrete form of $S(x)$, but will assume that it is an even function.
+
+Before we continue let us stress one important thing: this ansatz cannot express all the possible internal oscillations of the soliton. One obvious example, as it was noted in the text, is the case of the pulse-width oscillation. In order to capture this dynamics, we need to add frequency chirp to the ansatz.
+
+Substituting \eqref{eq:SolitonAnsatz} into \eqref{eq:SingleSolitonLagrangianDensity} and \eqref{eq:InteractionLagrangianDensity} and integrating over $t$ we arrive at the expressions for the averaged Lagrangians
 \begin{gather}
   L_{n} =
     I_{1} \, t_{n} \sigma_{n} A_{n}^{2} \frac{d \Omega_{n}}{d z} +
