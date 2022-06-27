@@ -139,20 +139,20 @@ plot.figure(figsize=(3.2, 2.6))
 plot.subplot(2, 1, 1)
 
 
-# Let's try to find a Gaussian in the left part of the plot
-def gaussian(x, *params):  # noqa: D401
-    """A single Gaussian distribution."""
+# Let's try to find a Lorentzian in the left part of the plot
+def lorentzian(x, *params):  # noqa: D401
+    """A Lorentzian distribution."""
     a, x0, dx = params
-    return a * numpy.exp(-(x - x0)**2 / dx**2)
+    return a / (1 + (x - x0)**2 / dx**2)
 
-params, _ = curve_fit(gaussian, fis, dfs, p0=[0.1, 1.0, 0.5])
+params, _ = curve_fit(lorentzian, fis, dfs, p0=[0.1, 1.0, 0.5])
 af, xf, dxf = params
 
 
 plot.scatter(fis, dfs, marker="x", s=10, label="Simulation", color=COLOR_BLACK)
 plot.plot(
-    f, gaussian(f, af, xf, dxf),
-    label="Gaussian fit",
+    f, lorentzian(f, af, xf, dxf),
+    label="Lorentzian fit",
     color=COLOR_GREY)
 
 plot.axvline(

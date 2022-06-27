@@ -55,8 +55,3 @@ and then run
     $ make draft
 
 This will produce the draft of the paper and put it inside `text` directory.
-
-## Acknowledgment
-
-Parts of the code are heavily inspired by the work of O. Melchert that he
-released as a Code Ocean instance https://codeocean.com/capsule/0624342/.
