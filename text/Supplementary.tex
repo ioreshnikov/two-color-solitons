@@ -1,45 +1,105 @@
-\documentclass[a4paper, 11pt]{article}
+\documentclass[aps, pra, signlecolumn, superscriptaddress, final, 11pt]{revtex4}
 \pdfoutput=1
 
 
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage{authblk}
-\usepackage[utf8]{inputenc}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{tikz}
+
 
 
 \newcommand{\abs}[1]{\left| #1 \right|}
 \renewcommand{\theequation}{S.\arabic{equation}}
+\renewcommand{\thefigure}{S.\arabic{figure}}
 
 
 \begin{document}
 
-\title{Supplementary Material}
+\title{Cherenkov radiation and scattering of external dispersive waves by two-color solitons (Supplemental Material)}
 
-\author[1]{Ivan Oreshnikov}
-\author[2,3,4]{Oliver Melchert}
-\author[2,3]{Stephanie Willms}
-\author[3]{Surajit Bose}
-\author[2,3]{Ihar Babushkin}
-\author[2,3,4]{Ayhan Demircan}
-\author[5]{Alexey Yulin}
+\author{Ivan Oreshnikov}
+\affiliation{Max Planck Institute for Intelligent Systems, Max-Planck-Ring 4, 72076 T\"ubingen, Germany}
 
-\affil[1]{Max Planck Institute for Intelligent Systems, Max-Planck-Ring 4, 72076 T\"ubingen, Germany}
-\affil[2]{Cluster of Exellence PhoenixD, Welfengarten 1, 30167 Hannover, Germany}
-\affil[3]{Institute of Quantum Optics, Leibniz Universit\"at Hannover, Welfengarten 1, 30167 Hannover, Germany}
-\affil[4]{Hannover Centre for Optical Technologies, Neinburger Strasse 17, 30167 Hannover, Germany}
-\affil[5]{Department of Nanophotonics and Metamaterials, ITMO University, Kronverskiy pr. 49, 19701 St.~Petersburg, Russia}
+\author{Oliver Melchert}
+\affiliation{Cluster of Exellence PhoenixD, Welfengarten 1, 30167 Hannover, Germany}
+\affiliation{Leibniz Universit\"at Hannover, Institute of Quantum Optics, Welfengarten 1, 30167 Hannover, Germany}
+\affiliation{Hannover Centre for Optical Technologies, Nienburger Strasse 17, 30167 Hannover, Germany}
+
+\author{Stephanie Willms}
+\affiliation{Cluster of Exellence PhoenixD, Welfengarten 1, 30167 Hannover, Germany}
+\affiliation{Leibniz Universit\"at Hannover, Institute of Quantum Optics, Welfengarten 1, 30167 Hannover, Germany}
+
+\author{Surajit Bose}
+\affiliation{Cluster of Exellence PhoenixD, Welfengarten 1, 30167 Hannover, Germany}
+\affiliation{Leibniz Universit\"at Hannover, Institute of Photonics, Nienburger Strasse 17, 30167 Hannover, Germany}
+
+\author{Ihar Babushkin}
+\affiliation{Cluster of Exellence PhoenixD, Welfengarten 1, 30167 Hannover, Germany}
+\affiliation{Leibniz Universit\"at Hannover, Institute of Quantum Optics, Welfengarten 1, 30167 Hannover, Germany}
+
+\author{Ayhan Demircan}
+\affiliation{Cluster of Exellence PhoenixD, Welfengarten 1, 30167 Hannover, Germany}
+\affiliation{Leibniz Universit\"at Hannover, Institute of Quantum Optics, Welfengarten 1, 30167 Hannover, Germany}
+\affiliation{Hannover Centre for Optical Technologies, Nienburger Strasse 17, 30167 Hannover, Germany}
+
+\author{Uwe Morgner}
+\affiliation{Cluster of Exellence PhoenixD, Welfengarten 1, 30167 Hannover, Germany}
+\affiliation{Leibniz Universit\"at Hannover, Institute of Quantum Optics, Welfengarten 1, 30167 Hannover, Germany}
+\affiliation{Hannover Centre for Optical Technologies, Nienburger Strasse 17, 30167 Hannover, Germany}
+
+\author{Alexey Yulin}
+\affiliation{Department of Physics, ITMO University, Kronverskiy pr. 49, 19701 St.~Petersburg, Russia}
 
 \date{\today}
 
 \maketitle
 
+\section*{Dispersion profile model}
+
+We model dispersion coefficient $\beta(\omega)$ with the following rational expression
+\begin{equation}
+  \label{eq:Beta}
+  \beta(\omega) = \frac{1}{c} \frac{
+    \sum_{n=0}^{3} {C_{n} \omega^{n+1}}
+  }{
+    \sum_{m=0}^{3} {D_{m} \omega^{m}}
+    }
+\end{equation}
+where $c = 0.299792458~\mu
+\text{m/fs}$ is the speed of light, and the coefficient sequences $C$ and $D$ are
+defined by
+\begin{eqnarray}
+C &=& (9.654, -39.739 \,\mathrm{fs},  16.885 \,\mathrm{fs^2}, -2.746 \,\mathrm{fs^3}),\quad \text{and},\\
+D &=& (1, -9.496 \,\mathrm{fs}, 4.221 \,\mathrm{fs^2}, -0.703 \,\mathrm{fs^3}).
+\end{eqnarray}
+%
+In here and everywhere in the paper we assume fs as a unit of
+time and $\mu$m as a unit of distance. Figure \ref{fig:Model} displays group
+velocity $v_{g}(\omega) = 1 / \beta'(\omega)$ and second order dispersion
+coefficient $\beta''(\omega)$ as functions of frequency. Frequencies
+$\omega_{1}$ and $\omega_{2}$ correspond to the central frequencies of the
+soliton's spectral components as chosen in the simulation corresponding to
+Fig.\,1 of the paper.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics{{Figures/FigA}.pdf}
+  \caption{
+    (a) group velocity $v_{g}$ and (b) second order dispersion coefficient $\beta''(\omega)$ in the model fiber. Labels $A_{1,2}$ and $N$ mark the regions of anomalous and normal dispersion.
+  }
+  \label{fig:Model}
+\end{figure}
 
 \section*{Small internal oscillations of the soliton}
 
 When analyzing the nonlinear scattering near an oscillatory mode we used an expression for the oscillation frequency. In this section we will derive this expression.
 
-Let us return to equation (3) for coupled solitons. We can re-normalize the equations by performing the following transformation
+Let us return to Eq.~(3) (of the main text) for coupled solitons. We can re-normalize the equations by performing the following transformation
 \begin{equation*}
   U_{n} \to \gamma_{n}^{1/2} e^{i \beta_{n} z} \cdot U_{n},
 \end{equation*}
@@ -56,7 +116,7 @@ This in turn allows us to recognize the modified couple of equations as Euler-La
     \mathcal{L}(U_{1}, \partial_{z} U_{1}, \partial_{t} U_{1}, \ldots)
     \, dt,
 \end{equation*}
-where Lagrangian density $\mathcal{L}$ is defined as a sum of three components $\mathcal{L} = \mathcal{L}_{1} + \mathcal{L}_{2} + \mathcal{L}_{\text{int}}$, with $L_{n}$ being a single-soliton Lagrangian density
+where Lagrangian density $\mathcal{L}$ is defined as a sum of three components $\mathcal{L} = \mathcal{L}_{1} + \mathcal{L}_{2} + \mathcal{L}_{\text{int}}$, with $\mathcal{L}_{n}$ being a single-soliton Lagrangian density
 \begin{equation}
   \label{eq:SingleSolitonLagrangianDensity}
   \mathcal{L}_{n} =
@@ -134,7 +194,7 @@ The averaged Lagrangian $L = L_{1} + L_{2} + L_{\text{int}}$ is now a function d
 where $P_{n}$ stands for either $A_{n}$, $\sigma_{n}$, $t_{n}$, $\Omega_{n}$ or $\phi_{n}$. The latter case --- variation with respect to the phase $\phi_{n}$ --- immediately yields the conservation of mass
 \begin{equation}
   \label{eq:ConservationOfMass}
-  N_{n} = \sigma_{n}(z) A_{n}^{2}(z) = const.
+  N_{n} = \sigma_{n}(z) A_{n}^{2}(z) = \mathrm{const.}
 \end{equation}
 
 Variation with respect to the detuning $\Omega_{n}$ fixes the group velocity of individual solitons
@@ -154,7 +214,7 @@ Variation with respect to the soliton position $t_{n}$ gives us an equation for 
 The symmetry in the overlap integral $I_{\text{int}}$ with respect to the soliton positions $t_{1}$ and $t_{2}$ leads to conservation of momentum
 \begin{equation}
   \label{eq:ConservationOfMomentum}
-  N_{1} \Omega_{1}(z) + N_{2} \Omega_{2}(z) = const.
+  N_{1} \Omega_{1}(z) + N_{2} \Omega_{2}(z) = \mathrm{const}.
 \end{equation}
 
 Finally, the difference between the variations with respect to $A_{n}$ and $\sigma_{n}$ gives us
@@ -249,8 +309,3 @@ which finally gives us the following expression for the resonance frequency
 \end{equation}
 
 \end{document}
-
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: t
-%%% End:

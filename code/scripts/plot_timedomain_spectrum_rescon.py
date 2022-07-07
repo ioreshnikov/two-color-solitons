@@ -19,7 +19,7 @@ from matplotlib.legend_handler import HandlerBase
 
 import numpy
 
-from common.fiber import beta, gamma
+from common.fiber import beta, beta1, gamma
 from common.helpers import (
     estimate_soliton_parameters,
     frame_of_reference,
@@ -211,6 +211,48 @@ plot.annotate(
     xycoords="axes fraction",
     textcoords="offset points",
     color="white")
+
+if fi:
+    # We need to put the annotations on the plot
+    t0 = 1000
+    vg = beta1(fi) - beta1(f1)
+    zc = abs(t0) / abs(vg)
+
+    # Incident wave
+    zi = zc / 2
+    ti = t0 + vg * zi
+
+    plot.annotate(
+        r"$i$",
+        xy=(zi / 10000, ti / 1000),
+        xytext=(-2.0, 0.0),
+        textcoords="offset points",
+        bbox=dict(boxstyle="circle", pad=0.15, fc="white", ec="black", linewidth=0.5),
+        fontsize=XSMALL_FONT_SIZE)
+
+    # Resonances
+    for n, (rf, _) in enumerate(peaks, start=1):
+        vg = beta1(rf) - beta1(f1)
+
+        # Equation of ray from the collision point is
+
+        #     t(z) = vg * (z - zc)  =>  z(t) = t / vg + zc
+
+        # We want to put the labels as far in z as possible, but we cannot just
+        # put the labels close to z.max(), since sometimes a reflected wave can
+        # hit time-domain boundary of the plot sooner. So we must first
+        # calculate zr at which the wave hits plot boundary:
+
+        zr = min(750 / abs(vg) + zc, z.max() * 10000)
+        tr = vg * (zr - zc)
+
+        plot.annotate(
+            str(n),
+            xy=(zr / 10000, tr / 1000),
+            xytext=(-8.0, 0.0),
+            textcoords="offset points",
+            bbox=dict(boxstyle="circle", pad=0.15, fc="white", ec="black", linewidth=0.5),
+            fontsize=XSMALL_FONT_SIZE)
 
 
 # Second panel: input and output spectra

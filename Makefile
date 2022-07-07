@@ -333,8 +333,11 @@ Fig6.pdf: 1.010_1.100_int.npz 1.010_1.100_int_sp.npz
 Fig7.pdf: 1.010_seed.npz $(addprefix 1.010_, $(addsuffix _rc10_sp.npz, $(RC_FREQS)))
 	python code/scripts/plot_fig_7.py npz/1.010_1.100_int.npz $(addprefix npz/1.010_, $(addsuffix _rc10_sp.npz, $(RC_FREQS))) fig/Fig7.pdf
 
+FigA.pdf:
+	python code/scripts/plot_fig_a.py fig/FigA.pdf
+
 .PHONY: fig
-fig: Fig1.pdf Fig2.pdf Fig3.pdf Fig4.pdf Fig5.pdf Fig6.pdf
+fig: Fig1.pdf Fig2.pdf Fig3.pdf Fig4.pdf Fig5.pdf Fig6.pdf Fig7.pdf
 
 
 # Text targets
@@ -348,12 +351,17 @@ draft: fig
 	cd text && pdflatex Draft.tex
 	cd text && pdflatex Draft.tex
 
+.PHONY: supplementary
+supplementary: FigA.pdf
+	cp fig/FigA.pdf text/Figures/
+	cd text && pdflatex Supplementary.tex
+
 
 # Paper source archive
 # ====================
 .PHONY: draft.zip
 draft.zip:
 	cd text && \
-	zip draft.zip Draft.tex Bibliography.bib Figures/*.pdf && \
+	zip draft.zip Draft.tex Supplementary.tex Bibliography.bib Figures/*.pdf && \
 	mv draft.zip .. && \
 	cd -
