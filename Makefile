@@ -354,14 +354,14 @@ draft: fig
 .PHONY: supplementary
 supplementary: FigA.pdf
 	cp fig/FigA.pdf text/Figures/
-	cd text && pdflatex Supplementary.tex
+	cd text && pdflatex Supplemental\ Material.tex
 
 
 # Paper source archive
 # ====================
-.PHONY: draft.zip
-draft.zip:
+.PHONY: submission.zip
+submission.zip:
 	cd text && \
-	zip draft.zip Draft.tex Supplementary.tex Bibliography.bib Figures/*.pdf && \
-	mv draft.zip .. && \
+	zip submission.zip Draft.tex Supplemental\ Material.tex Bibliography.bib Figures/*.pdf && \
+	mv submission.zip .. && \
 	cd -
