@@ -2,7 +2,7 @@
 
 This repository contains the source code necessary to reproduce the results
 published in I. Oreshnikov et al. Cherenkov Radiation and Scattering of
-External Dispersive Waves by Two-Color Solitons [arxiv](https://arxiv.org/).
+External Dispersive Waves by Two-Color Solitons [arxiv](https://arxiv.org/abs/2207.03541).
 
 ## Layout
 
