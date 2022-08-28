@@ -108,8 +108,8 @@ plot.annotate(
 
 plot.xlim(0.5, 3.5)
 plot.ylim(73.0, 76.0)
-plot.xlabel(r"Frequency $\omega$, rad/fs")
-plot.ylabel(r"$v_g$, nm/fs")
+plot.xlabel(r"Frequency $\omega$ (rad/fs)")
+plot.ylabel(r"$v_g$ (nm/fs)")
 
 ax = plot.subplot(2, 1, 2)
 plot.plot(f, b2, color=COLOR_BLACK)
@@ -155,8 +155,8 @@ plot.annotate(
 
 plot.xlim(0.5, 3.5)
 plot.ylim(-0.5, 0.5)
-plot.xlabel(r"Frequency $\omega$, rad/fs")
-plot.ylabel(r"$\beta''(\omega)$, fs$^2$/$\mu$m")
+plot.xlabel(r"Frequency $\omega$ (rad/fs)")
+plot.ylabel(r"$\beta''(\omega)$, (fs$^2$/$\mu$m)")
 
 plot.tight_layout()
 

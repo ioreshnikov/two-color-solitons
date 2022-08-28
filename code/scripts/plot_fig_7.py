@@ -93,20 +93,20 @@ for filename in args.input:
     plot.subplot(2, 2, 1)
     plot.plot(z / 1E4, f2s)
     plot.plot(z / 1E4, f0s)
-    plot.xlabel("Distance z, cm")
+    plot.xlabel("Distance z (cm)")
 
     plot.subplot(2, 2, 2)
     plot.plot(z / 1E4, df)
-    plot.xlabel("Distance z, cm")
+    plot.xlabel("Distance z (cm)")
 
     plot.subplot(2, 2, 3)
     plot.plot(z / 1E4, a2s)
     plot.plot(z / 1E4, a0s)
-    plot.xlabel("Distance z, cm")
+    plot.xlabel("Distance z (cm)")
 
     plot.subplot(2, 2, 4)
     plot.plot(z / 1E4, da)
-    plot.xlabel("Distance z, cm")
+    plot.xlabel("Distance z (cm)")
 
     plot.suptitle(r"$\omega_{{i}} = {:.3f}$".format(fi))
     plot.tight_layout()
@@ -163,8 +163,8 @@ plot.axvline(
     zorder=-10)
 plot.xlim(f.min(), f.max())
 plot.ylim(0.00, 0.03)
-plot.xlabel(r"Incident frequency $\omega_{i}$, rad/fs")
-plot.ylabel(r"max. $\Delta \omega_{2}$, rad/fs")
+plot.xlabel(r"Incident frequency $\omega_{i}$ (rad/fs)")
+plot.ylabel(r"max. $\Delta \omega_{2}$ (rad/fs)")
 plot.legend()
 
 plot.annotate(
@@ -188,8 +188,8 @@ plot.axvline(
     zorder=-10)
 plot.xlim(f.min(), f.max())
 plot.ylim(-0.01, +0.01)
-plot.xlabel(r"Frequency $\omega$, rad/fs")
-plot.ylabel(r"$k$, rad/$\mu$m")
+plot.xlabel(r"Frequency $\omega$ (rad/fs)")
+plot.ylabel(r"$k$ (rad/$\mu$m)")
 plot.legend(ncol=2)
 
 plot.annotate(

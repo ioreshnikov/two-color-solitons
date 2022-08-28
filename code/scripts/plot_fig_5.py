@@ -11,7 +11,7 @@ from matplotlib.ticker import MultipleLocator
 import numpy
 
 from common.helpers import freqs
-from common.plotter import pr_setup, pr_publish
+from common.plotter import COLOR_BLUE1, COLOR_RED, pr_setup, pr_publish
 
 
 parser = ArgumentParser()
@@ -106,8 +106,8 @@ plot.pcolormesh(
 plot.xlim(z.min(), z.max())
 plot.ylim(-0.25, +1.75)
 plot.yticks([0.0, +0.5, +1.0, +1.5])
-plot.xlabel(r"Distance $z$, cm")
-plot.ylabel(r"Delay $t$, ps")
+plot.xlabel(r"Distance $z$ (cm)")
+plot.ylabel(r"Delay $t$ (ps)")
 plot.colorbar()
 
 plot.annotate(
@@ -126,8 +126,8 @@ iz = len(z) // 10
 
 da1 = a1s - a1s[iz]
 da2 = a2s - a2s[iz]
-plot.plot(z, da1, color="black", label="1")
-plot.plot(z, da2, color="gray",  label="2")
+plot.plot(z, da1, color=COLOR_RED, label="1")
+plot.plot(z, da2, color=COLOR_BLUE1, label="2")
 plot.legend(ncol=2, loc="upper center")
 
 plot.xlim(z.min(), z.max())
@@ -136,8 +136,8 @@ ymin = min(da1.min(), da2.min())
 ymax = max(da1.max(), da2.max())
 margin = 0.25 * (ymax - ymin)
 plot.ylim(-0.01, +0.01)
-plot.xlabel(r"Distance $z$, cm")
-plot.ylabel(r"$\Delta A_n$, a.u")
+plot.xlabel(r"Distance $z$ (cm)")
+plot.ylabel(r"$\Delta A_n$ (arb. units)")
 
 plot.annotate(
     "(b.1)",
@@ -151,8 +151,8 @@ plot.subplot(gs[1, 1])
 df1 = f1s - f1s[iz]
 df2 = f2s - f2s[iz]
 
-plot.plot(z, df1, color="black", label="1")
-plot.plot(z, df2, color="gray",  label="2")
+plot.plot(z, df1, color=COLOR_RED, label="1")
+plot.plot(z, df2, color=COLOR_BLUE1, label="2")
 plot.legend(ncol=2, loc="upper center")
 
 plot.xlim(z.min(), z.max())
@@ -162,8 +162,8 @@ ymax = max(df1.max(), df2.max())
 margin = 0.25 * (ymax - ymin)
 
 plot.ylim(ymin - margin, ymax + 2 * margin)
-plot.xlabel(r"Distance $z$, cm")
-plot.ylabel(r"$\Delta \omega_{n}$, rad/fs")
+plot.xlabel(r"Distance $z$ (cm)")
+plot.ylabel(r"$\Delta \omega_{n}$ (rad/fs)")
 
 plot.annotate(
     "(b.2)",
@@ -175,14 +175,14 @@ plot.annotate(
 
 # Fourth panel: input and output spectra
 ax = plot.subplot(gs[2, :])
-plot.plot(f, v0**0.5, color="black", linewidth=0.5, label="in",  zorder=10)
-plot.plot(f, v1**0.5, color="gray",  linewidth=1.0, label="out", alpha=0.75)
+plot.plot(f, v0**0.5, color=COLOR_BLUE1, label="in",  zorder=10)
+plot.plot(f, v1**0.5, color=COLOR_RED, label="out")
 
 plot.legend(ncol=2, loc="upper center")
 plot.xlim(0.5, 4.0)
 plot.ylim(0.0, 1.7)
-plot.xlabel(r"Frequency $\omega$, rad/fs")
-plot.ylabel(r"$\left| \tilde u(\omega) \right|^{1/2}$, a.\,u.")
+plot.xlabel(r"Frequency $\omega$ (rad/fs)")
+plot.ylabel(r"$\left| \tilde u(\omega) \right|^{1/2}$ (arb. units)")
 ax.xaxis.set_major_locator(MultipleLocator(0.5))
 
 plot.annotate(

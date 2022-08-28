@@ -29,7 +29,12 @@ from common.helpers import (
     freqs,
     fundamental_soliton_dispersive_relation,
     zeros_on_a_grid)
-from common.plotter import XSMALL_FONT_SIZE, pr_setup, pr_publish
+from common.plotter import (
+    COLOR_BLUE1,
+    COLOR_RED,
+    COLOR_VIOLET,
+    XSMALL_FONT_SIZE,
+    pr_setup, pr_publish)
 
 
 parser = argparse.ArgumentParser()
@@ -182,8 +187,8 @@ plot.pcolormesh(
 plot.xlim(z.min(), z.max())
 plot.ylim(-1.0, +1.0)
 plot.yticks([-1.0, 0.0, +1.0])
-plot.xlabel(r"Distance $z$, cm")
-plot.ylabel(r"Delay $t$, ps")
+plot.xlabel(r"Distance $z$ (cm)")
+plot.ylabel(r"Delay $t$ (ps)")
 plot.colorbar()
 
 plot.annotate(
@@ -200,8 +205,8 @@ plot.subplot(gs[1, 0])
 
 da1 = a1s - a1s[iz]
 da2 = a2s - a2s[iz]
-plot.plot(z, da1, color="black", label="1")
-plot.plot(z, da2, color="gray",  label="2")
+plot.plot(z, da1, color=COLOR_RED, label="1")
+plot.plot(z, da2, color=COLOR_BLUE1, label="2")
 plot.legend(ncol=2, loc="upper center")
 
 plot.xlim(z.min(), z.max())
@@ -210,8 +215,8 @@ ymin = min(da1.min(), da2.min())
 ymax = max(da1.max(), da2.max())
 margin = 0.25 * (ymax - ymin)
 plot.ylim(ymin - margin, ymax + 2 * margin)
-plot.xlabel(r"Distance $z$, cm")
-plot.ylabel(r"$\Delta A_n$, a.u")
+plot.xlabel(r"Distance $z$ (cm)")
+plot.ylabel(r"$\Delta A_n$ (arb. units)")
 
 plot.annotate(
     "(b.1)",
@@ -225,8 +230,8 @@ plot.subplot(gs[1, 1])
 df1 = f1s - f1s[iz]
 df2 = f2s - f2s[iz]
 
-plot.plot(z, df1, color="black", label="1")
-plot.plot(z, df2, color="gray",  label="2")
+plot.plot(z, df1, color=COLOR_RED, label="1")
+plot.plot(z, df2, color=COLOR_BLUE1, label="2")
 plot.legend(ncol=2, loc="upper center")
 
 plot.xlim(z.min(), z.max())
@@ -236,8 +241,8 @@ ymax = max(df1.max(), df2.max())
 margin = 0.25 * (ymax - ymin)
 
 plot.ylim(ymin - margin, ymax + 2 * margin)
-plot.xlabel(r"Distance $z$, cm")
-plot.ylabel(r"$\Delta \omega_{n}$, rad/fs")
+plot.xlabel(r"Distance $z$ (cm)")
+plot.ylabel(r"$\Delta \omega_{n}$ (rad/fs)")
 
 plot.annotate(
     "(b.2)",
@@ -249,14 +254,14 @@ plot.annotate(
 
 # Fourth panel: input and output spectra
 ax = plot.subplot(gs[2, :])
-plot.plot(f, v0**0.5, color="black", linewidth=0.5, label="in",  zorder=10)
-plot.plot(f, v1**0.5, color="gray",  linewidth=1.0, label="out", alpha=0.75)
+plot.plot(f, v0**0.5, color=COLOR_BLUE1, label="in",  zorder=10)
+plot.plot(f, v1**0.5, color=COLOR_RED, label="out")
 
 plot.legend(ncol=2, loc="upper center")
 plot.xlim(0.5, 4.0)
 plot.ylim(0.0, 1.7)
-plot.xlabel(r"Frequency $\omega$, rad/fs")
-plot.ylabel(r"$\left| \tilde u(\omega) \right|^{1/2}$, a.\,u.")
+plot.xlabel(r"Frequency $\omega$ (rad/fs)")
+plot.ylabel(r"$\left| \tilde u(\omega) \right|^{1/2}$ (arb. units)")
 ax.xaxis.set_major_locator(MultipleLocator(0.5))
 
 plot.annotate(
@@ -323,8 +328,7 @@ for n, rf in zip(harmonics, srf21):
         continue
     plot.plot(
         f, k2 - k1 + bi + n * k0,
-        color="gray",
-        linestyle="dashed",
+        color=COLOR_VIOLET,
         label=(r"$k_{2} - k_{1} + \beta(\omega_{i})$" if n == 0 else None),
         linewidth=(1.0 if n == 0 else 0.5))
     kmins.append((k2 - k1 + bi + n * k0).min())
@@ -337,8 +341,8 @@ margin = 0.25 * (kmax - kmin)
 pb0 = plot.plot(f, b0, color="black")
 plot.xlim(0.5, 4.0)
 plot.ylim(kmin - margin, kmax + 2*margin)
-plot.ylabel(r"$k$, rad/$\mu$m")
-plot.xlabel(r"Frequency $\omega$, rad/fs")
+plot.ylabel(r"$k$ (rad/$\mu$m)")
+plot.xlabel(r"Frequency $\omega$ (rad/fs)")
 ax.xaxis.set_major_locator(MultipleLocator(0.5))
 
 plot.legend(ncol=ncolumns, loc="upper center")

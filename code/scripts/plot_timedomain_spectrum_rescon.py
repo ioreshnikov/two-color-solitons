@@ -26,7 +26,13 @@ from common.helpers import (
     freqs,
     fundamental_soliton_dispersive_relation,
     peaks_close_to, zeros_on_a_grid)
-from common.plotter import XSMALL_FONT_SIZE, pr_setup, pr_publish
+from common.plotter import (
+    COLOR_BLUE1,
+    COLOR_GREEN,
+    COLOR_RED,
+    COLOR_VIOLET,
+    XSMALL_FONT_SIZE,
+    pr_setup, pr_publish)
 
 
 parser = argparse.ArgumentParser(
@@ -200,8 +206,8 @@ plot.pcolormesh(
 plot.xlim(z.min(), z.max())
 plot.ylim(-1.0, +1.0)
 plot.yticks([-1.0, 0.0, +1.0])
-plot.xlabel(r"Distance $z$, cm")
-plot.ylabel(r"Delay $t$, ps")
+plot.xlabel(r"Distance $z$ (cm)")
+plot.ylabel(r"Delay $t$ (ps)")
 plot.colorbar()
 
 plot.annotate(
@@ -257,13 +263,13 @@ if fi:
 
 # Second panel: input and output spectra
 ax1 = plot.subplot(inner_gs2[0])
-plot.plot(f, v0**0.5, color="black", linewidth=0.5, label="in",  zorder=10)
-plot.plot(f, v1**0.5, color="gray",  linewidth=1.0, label="out", alpha=0.75)
+plot.plot(f, v0**0.5, COLOR_BLUE1, label="in",  zorder=10)
+plot.plot(f, v1**0.5, COLOR_RED, label="out")
 
 plot.legend(ncol=2, loc="upper center")
 plot.xlim(0.5, 4.0)
 plot.ylim(0.0, 1.4)
-plot.ylabel(r"$\left| \tilde u(\omega) \right|^{1/2}$, a.\,u.")
+plot.ylabel(r"$\left| \tilde u(\omega) \right|^{1/2}$ (arb. units)")
 ax1.xaxis.set_major_locator(MultipleLocator(0.5))
 plot.setp(ax1.get_xticklabels(), visible=False)
 
@@ -346,23 +352,21 @@ kmaxs = [b0.max()]
 if not fi:
     # Again, if it's not a scattering problem, we deal only with
     # Cherenkov radiation.
-    plot.plot(f, k1, color="black", linestyle="solid", label="$k_{1}$")
-    plot.plot(f, k2, color="black", linestyle="dashed", label="$k_{2}$")
+    plot.plot(f, k1, color=COLOR_RED, label="$k_{1}$")
+    plot.plot(f, k2, color=COLOR_BLUE1, label="$k_{2}$")
 
     ncolumns = 2
     if any((2*k2 - k1) < b0):
         ncolumns += 1
         plot.plot(
             f, 2*k2 - k1,
-            color="black",
-            linestyle="dotted",
+            color=COLOR_VIOLET,
             label="$2k_{2} - k_{1}$")
     if any((2*k1 - k2) < b0):
         ncolumns += 1
         plot.plot(
             f, 2*k1 - k2,
-            color="gray",
-            linestyle="dotted",
+            color=COLOR_VIOLET,
             label="$2k_{1} - k_{2}$")
 
     kmins.extend([
@@ -394,8 +398,7 @@ else:
         ncolumns += 1
         plot.plot(
             f, k2 - k1 + bi,
-            color="gray",
-            linestyle="dashed",
+            color=COLOR_VIOLET,
             label=r"$k_{2} - k_{1} + \beta(\omega_{i})$")
         kmins.append((k2 - k1 + bi).min())
         kmaxs.append((k2 - k1 + bi).max())
@@ -404,8 +407,7 @@ else:
         ncolumns += 1
         plot.plot(
             f, k1 - k2 + bi,
-            color="gray",
-            linestyle="dotted",
+            color=COLOR_GREEN,
             label=r"$k_{1} - k_{2} + \beta(\omega_{i})$")
         kmins.append((k1 - k2 + bi).min())
         kmaxs.append((k1 - k2 + bi).max())
@@ -423,8 +425,8 @@ ticks = ticks[:-1]
 pb0 = plot.plot(f, b0, color="black")
 plot.xlim(0.5, 4.0)
 plot.ylim(kmin, kmax)
-plot.ylabel(r"$k$, rad/$\mu$m")
-plot.xlabel(r"Frequency $\omega$, rad/fs")
+plot.ylabel(r"$k$ (rad/$\mu$m)")
+plot.xlabel(r"Frequency $\omega$ (rad/fs)")
 ax3.xaxis.set_major_locator(MultipleLocator(0.5))
 
 # If the top tick is way to high we need to drop it.
@@ -454,13 +456,11 @@ if fi and len(srf21) and len(srf12) and not k12_too_close:
             line1 = plot.Line2D(
                 [x0, x0 + width],
                 [0.7 * height, 0.7 * height],
-                color="gray",
-                linestyle="dashed")
+                color=COLOR_VIOLET)
             line2 = plot.Line2D(
                 [x0, x0 + width],
                 [0.3 * height, 0.3 * height],
-                color="gray",
-                linestyle="dotted")
+                color=COLOR_GREEN)
             return [line1, line2]
 
     plot.legend(
